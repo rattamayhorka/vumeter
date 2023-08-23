@@ -1,6 +1,6 @@
 # MCU name
 MCU = atmega32
-F_CPU = 8000000
+F_CPU = 4000000
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex 
@@ -206,7 +206,11 @@ full: $(TARGET).hex $(TARGET).eep
 
 
 burn-fuse: 
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xFF:m -u -U hfuse:w:0x99:m
+
+
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -v -U lfuse:w:0xFF:m -U hfuse:w:0x99:m 
+
+	# $(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xD4:m -u -U hfuse:w:0x99:m
 
 reset:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) 
