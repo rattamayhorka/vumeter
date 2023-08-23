@@ -53,16 +53,14 @@ int main(void) {
 
     while (1) {
         lcd_clrscr();
-        
         for (int charIndex = 0; charIndex < 8; charIndex++) {
-            for (int col = 0; col < 16; col++) {
-                // Mostrar el carácter especial en la fila de arriba
-                lcd_command(0x80 | col); // Mover el cursor a la fila de arriba y la columna actual
+            for (int col = 0; col < 15; col++) {
+
+                lcd_gotoxy(col,0); // Mover el cursor a la fila de arriba y la columna actual
                 lcd_data(charIndex); // Escribir el carácter especial
-                
-                // Mostrar el carácter especial en la fila de abajo
-                lcd_command(0xC0 | col); // Mover el cursor a la fila de abajo y la columna actual
+                lcd_gotoxy(col,1); // Mover el cursor a la fila de abajo y la columna actual
                 lcd_data(charIndex); // Escribir el carácter especial
+
             }
             _delay_ms(500); // Esperar medio segundo antes de mostrar el siguiente carácter
         }
