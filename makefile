@@ -210,8 +210,10 @@ burn-fuse:
 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -v -U lfuse:w:0xFF:m -U hfuse:w:0x99:m 
 
-	# $(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xD4:m -u -U hfuse:w:0x99:m
+read-fuse:
 
+
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:r:-:h -U hfuse:r:-:h
 reset:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) 
 
