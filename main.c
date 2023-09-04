@@ -59,7 +59,6 @@ int main(void) {
 
     while (1) {
     uint16_t adcValue = adc_read(); // Leer el valor del ADC
-    // Calcular charIndex en función de adcValue y los rangos
     uint8_t charIndex;
 
     int row;
@@ -85,7 +84,7 @@ int main(void) {
         lcd_gotoxy(col, row); // Mover a la fila correspondiente
         lcd_data(charIndex); // Mostrar el carácter especial correspondiente en la posición actual
     }
-    _delay_ms(10); // Esperar 100 ms antes de actualizar la pantalla
+    _delay_ms(10); // Esperar 10 ms antes de actualizar la pantalla
 
     }
 }
