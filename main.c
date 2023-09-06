@@ -51,10 +51,8 @@ void usart_init(void) {
     // Configurar la velocidad de comunicación en 9600 bps
     UBRRH = (BAUDRATE>>8);
     UBRRL = BAUDRATE;
-
     // Habilitar la transmisión y la recepción UART
     UCSRB = (1 << TXEN) | (1 << RXEN);
-
     // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
 }
@@ -66,20 +64,14 @@ void usart_transmit(unsigned char data) {
     UDR = data;
 }
 
-void send_volume_message(uint8_t row) {
+void send_volume_message(uint32_t adcValue) {
     char message[20];
-    // Construir el mensaje basado en el valor de 'row'
-    if (row == 3) {
-        sprintf(message, "volumen de nivel 3");
-    } else if (row == 2) {
-        sprintf(message, "volumen de nivel 2");
-    } else if (row == 1) {
-        sprintf(message, "volumen de nivel 1");
-    } else if (row == 0) {
-        sprintf(message, "volumen de nivel 0");
-    } else {
-        sprintf(message, "Valor no válido");
-    }
+    // Realizar la conversión de adcValue a un valor de volumen en el rango de 0 a 100
+    uint32_t volume = (uint32_t)((adcValue * 100) / 1024);
+
+    // Construir el mensaje con el valor de volumen
+    sprintf(message, "Volumen: %ld", volume);
+
     // Enviar el mensaje por USART
     for (int i = 0; message[i] != '\0'; i++) {
         usart_transmit(message[i]);
@@ -92,8 +84,8 @@ int main(void) {
     adc_init(); // Inicializar el ADC
     usart_init(); // Inicializar USART
     lcd_clrscr();
-    // Inicializar variables para el seguimiento de cambios en 'row'
-    uint8_t prevRow = 255;  // Un valor que no coincida con ninguna fila válida
+    uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
+
     // Cargar los patrones en la memoria de caracteres
     for (int i = 0; i < 8; i++) {
         lcd_command(0x40 + i * 8); // Moverse a la dirección de escritura correcta para el carácter i
@@ -128,13 +120,12 @@ while (1) {
             lcd_data(charIndex); // Mostrar el carácter especial correspondiente en la posición actual
         }
 
-        // Verificar si 'row' ha cambiado
-        if (row != prevRow) {
-            // Enviar el mensaje de volumen por USART y terminar con un código de nueva línea
-            send_volume_message(row);
-            usart_transmit('\n');  // Agregar un carácter de nueva línea
-            // Actualizar el valor anterior de 'row'
-            prevRow = row;
+        if (adcValue != prevAdcValue) {
+           // Enviar el mensaje de volumen por USART y terminar con un código de nueva línea
+           send_volume_message(adcValue);
+           usart_transmit('\n');  // Agregar un carácter de nueva línea
+           // Actualizar el valor anterior de 'adcValue'
+           prevAdcValue = adcValue;
         }
         for (int col = 0; col < 20; col++) {
             lcd_gotoxy(col, row); // Mover a la fila correspondiente
