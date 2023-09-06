@@ -70,7 +70,7 @@ void send_volume_message(uint32_t adcValue) {
     uint32_t volume = (uint32_t)((adcValue * 100) / 1024);
 
     // Construir el mensaje con el valor de volumen
-    sprintf(message, "Volumen: %ld", volume);
+    sprintf(message, "%ld", volume);
 
     // Enviar el mensaje por USART
     for (int i = 0; message[i] != '\0'; i++) {
