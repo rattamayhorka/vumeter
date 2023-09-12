@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
+#include <avr/interrupt.h>
 #include "lcd.h"
 
 #define BAUD 9600
@@ -94,7 +95,7 @@ int main(void) {
         }
     }
 
-while (1) {
+    while (1) {
         uint16_t adcValue = adc_read(); // Leer el valor del ADC
         uint8_t charIndex;
         int row;
@@ -114,10 +115,6 @@ while (1) {
         } else {
             charIndex = 8; // Valor predeterminado para valores fuera de los rangos
             row = 3; // Valor predeterminado para valores fuera de los rangos
-        }
-        for (int col = 0; col < 20; col++) {
-            lcd_gotoxy(col, row); // Mover a la fila correspondiente
-            lcd_data(charIndex); // Mostrar el carácter especial correspondiente en la posición actual
         }
 
         if (adcValue != prevAdcValue) {
