@@ -7,6 +7,7 @@
 #define BAUD 9600
 #define BAUDRATE ((F_CPU)/(BAUD*8UL)-1)
 
+
 const uint8_t customPatterns[8][8] = {
     // Carácter 1
     { 0b00000, 0b00000, 0b00000, 0b00000,
@@ -47,45 +48,11 @@ uint16_t adc_read(void) {
     return ADC; // Devolver el valor convertido
 }
 
-// Funciones para USART
-void usart_init(void) {
-    // Configurar la velocidad de comunicación en 9600 bps
-    UBRRH = (BAUDRATE>>8);
-    UBRRL = BAUDRATE;
-    // Habilitar la transmisión y la recepción UART
-    UCSRB = (1 << TXEN) | (1 << RXEN);
-    // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
-    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
-}
-
-void usart_transmit(unsigned char data) {
-    // Esperar a que el registro de transmisión esté vacío
-    while (!(UCSRA & (1 << UDRE)));
-    // Enviar el dato
-    UDR = data;
-}
-
-void send_volume_message(uint32_t adcValue) {
-    char message[20];
-    // Realizar la conversión de adcValue a un valor de volumen en el rango de 0 a 100
-    uint32_t volume = (uint32_t)((adcValue * 100) / 1024);
-
-    // Construir el mensaje con el valor de volumen
-    sprintf(message, "%ld", volume);
-
-    // Enviar el mensaje por USART
-    for (int i = 0; message[i] != '\0'; i++) {
-        usart_transmit(message[i]);
-    }
-}
-
 int main(void) {
     DDRC = 0xFF;
     lcd_init(LCD_DISP_ON);
     adc_init(); // Inicializar el ADC
-    usart_init(); // Inicializar USART
     lcd_clrscr();
-    uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
 
     // Cargar los patrones en la memoria de caracteres
     for (int i = 0; i < 8; i++) {
@@ -115,14 +82,6 @@ int main(void) {
         } else {
             charIndex = 8; // Valor predeterminado para valores fuera de los rangos
             row = 3; // Valor predeterminado para valores fuera de los rangos
-        }
-
-        if (adcValue != prevAdcValue) {
-           // Enviar el mensaje de volumen por USART y terminar con un código de nueva línea
-           send_volume_message(adcValue);
-           usart_transmit('\n');  // Agregar un carácter de nueva línea
-           // Actualizar el valor anterior de 'adcValue'
-           prevAdcValue = adcValue;
         }
         for (int col = 0; col < 20; col++) {
             lcd_gotoxy(col, row); // Mover a la fila correspondiente
