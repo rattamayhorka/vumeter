@@ -1,7 +1,7 @@
 import serial
 import subprocess
 
-ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudios
+ser = serial.Serial('/dev/ttyUSB1', 9600)  # Configuración de puerto serie y baudios
 
 try:
     char_buffer = ""  # Buffer para acumular caracteres

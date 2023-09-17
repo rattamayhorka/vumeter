@@ -3,7 +3,7 @@ import serial
 import time
 
 # Configura el puerto serial. Asegúrate de cambiar el puerto COMx según tu sistema.
-ser = serial.Serial('/dev/ttyUSB0', 9600)  # Cambia 'COMx' al puerto serial correcto y ajusta la velocidad de baudios según sea necesario
+ser = serial.Serial('/dev/ttyUSB1', 9600)  # Cambia 'COMx' al puerto serial correcto y ajusta la velocidad de baudios según sea necesario
 
 # Variables para almacenar el artista y el título anteriores
 prev_artist = ""
@@ -20,13 +20,13 @@ while True:
 
         # Ejecuta el comando y captura la salida estándar
         title = subprocess.check_output(
-            'cmus-remote -Q 2> /dev/null | grep "tag title " | cut -c11-', 
+            'cmus-remote -Q 2> /dev/null | grep "tag title " | cut -c11-',
             shell=True,
             text=True  # Asegura que la salida sea una cadena de texto (str)
         ).strip()  # Elimina espacios en blanco al principio y al final
 
         if artist != prev_artist or title != prev_title: # Verifica si artist o title han cambiado
-            output = f"Playing now: \n{artist} - {title}"  # Concatena la información
+            output = f"Now playing: \n{artist} - {title} "  # Concatena la información
             print(output)  # Imprime la salida
             for char in output:
                 ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial

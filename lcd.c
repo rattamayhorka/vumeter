@@ -1,7 +1,25 @@
+// Post: "The USART of the AVR"
+// URL: http://maxembedded.com/2013/09/30/the-usart-of-the-avr/ ‎
+// Author: Yash Tambi, VIT University, tambi@maxEmbedded.com
+
+/* 	DISCLAIMER
+
+	This is the same code as given in the above URL. Though the code is tested and approved, the author
+	is not responsible for any damage, physical, mental or social, which might occur due to the implementation
+	of this code and its derivatives, whether in full or part thereof. Use it at your own risk.
+
+	LICENSE
+	
+	The user is free to modify, reuse, reproduce and distribute the code and its derivatives to any extent,
+	whether for free or paid. The user can also use this code for commercial purposes. In other words,
+	do whatever you want with the code!
+   
+*/
+
 /****************************************************************************
- Title:     HD44780U LCD library
- Author:    Peter Fleury <pfleury@gmx.ch>  http://tinyurl.com/peterfleury
- File:	    $Id: lcd.c,v 1.15.2.2 2015/01/17 12:16:05 peter Exp $
+ Title	:   HD44780U LCD library
+ Author:    Peter Fleury <pfleury@gmx.ch>  http://jump.to/fleury
+ File:	    $Id: lcd.c,v 1.14.2.2 2012/02/12 07:51:00 peter Exp $
  Software:  AVR-GCC 3.3 
  Target:    any AVR device, memory mapped mode only for AT90S4414/8515/Mega
 
@@ -25,7 +43,6 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include <util/delay.h>
 #include "lcd.h"
 
 
@@ -43,7 +60,7 @@
 
 
 #if LCD_IO_MODE
-#define lcd_e_delay()   _delay_us(LCD_DELAY_ENABLE_PULSE)
+#define lcd_e_delay()   __asm__ __volatile__( "rjmp 1f\n 1:" );   //#define lcd_e_delay() __asm__ __volatile__( "rjmp 1f\n 1: rjmp 2f\n 2:" );
 #define lcd_e_high()    LCD_E_PORT  |=  _BV(LCD_E_PIN);
 #define lcd_e_low()     LCD_E_PORT  &= ~_BV(LCD_E_PIN);
 #define lcd_e_toggle()  toggle_e()
@@ -89,11 +106,29 @@ static void toggle_e(void);
 */
 
 
+
+/*************************************************************************
+ delay loop for small accurate delays: 16-bit counter, 4 cycles/loop
+*************************************************************************/
+static inline void _delayFourCycles(unsigned int __count)
+{
+    if ( __count == 0 )    
+        __asm__ __volatile__( "rjmp 1f\n 1:" );    // 2 cycles
+    else
+        __asm__ __volatile__ (
+    	    "1: sbiw %0,1" "\n\t"                  
+    	    "brne 1b"                              // 4 cycles/loop
+    	    : "=w" (__count)
+    	    : "0" (__count)
+    	   );
+}
+
+
 /************************************************************************* 
 delay for a minimum of <us> microseconds
 the number of loops is calculated at compile-time from MCU clock frequency
 *************************************************************************/
-#define delay(us)  _delay_us(us) 
+#define delay(us)  _delayFourCycles( ( ( 1*(XTAL/4000) )*us)/1000 )
 
 
 #if LCD_IO_MODE
@@ -120,12 +155,12 @@ static void lcd_write(uint8_t data,uint8_t rs)
     unsigned char dataBits ;
 
 
-    if (rs) {        /* write data        (RS=1, RW=0) */
+    if (rs) {   /* write data        (RS=1, RW=0) */
        lcd_rs_high();
-    } else {         /* write instruction (RS=0, RW=0) */
+    } else {    /* write instruction (RS=0, RW=0) */
        lcd_rs_low();
     }
-    lcd_rw_low();    /* RW=0  write mode      */
+    lcd_rw_low();
 
     if ( ( &LCD_DATA0_PORT == &LCD_DATA1_PORT) && ( &LCD_DATA1_PORT == &LCD_DATA2_PORT ) && ( &LCD_DATA2_PORT == &LCD_DATA3_PORT )
       && (LCD_DATA0_PIN == 0) && (LCD_DATA1_PIN == 1) && (LCD_DATA2_PIN == 2) && (LCD_DATA3_PIN == 3) )
@@ -274,7 +309,7 @@ static uint8_t lcd_waitbusy(void)
     while ( (c=lcd_read(0)) & (1<<LCD_BUSY)) {}
     
     /* the address counter is updated 4us after the busy flag is cleared */
-    delay(LCD_DELAY_BUSY_FLAG);
+    delay(2);
 
     /* now read the address counter */
     return (lcd_read(0));  // return address counter
@@ -536,26 +571,26 @@ void lcd_init(uint8_t dispAttr)
         DDR(LCD_DATA2_PORT) |= _BV(LCD_DATA2_PIN);
         DDR(LCD_DATA3_PORT) |= _BV(LCD_DATA3_PIN);
     }
-    delay(LCD_DELAY_BOOTUP);             /* wait 16ms or more after power-on       */
+    delay(16000);        /* wait 16ms or more after power-on       */
     
     /* initial write to lcd is 8bit */
-    LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);    // LCD_FUNCTION>>4;
-    LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);    // LCD_FUNCTION_8BIT>>4;
+    LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);  // _BV(LCD_FUNCTION)>>4;
+    LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);  // _BV(LCD_FUNCTION_8BIT)>>4;
     lcd_e_toggle();
-    delay(LCD_DELAY_INIT);               /* delay, busy flag can't be checked here */
+    delay(4992);         /* delay, busy flag can't be checked here */
    
     /* repeat last command */ 
     lcd_e_toggle();      
-    delay(LCD_DELAY_INIT_REP);           /* delay, busy flag can't be checked here */
+    delay(64);           /* delay, busy flag can't be checked here */
     
     /* repeat last command a third time */
     lcd_e_toggle();      
-    delay(LCD_DELAY_INIT_REP);           /* delay, busy flag can't be checked here */
+    delay(64);           /* delay, busy flag can't be checked here */
 
     /* now configure for 4bit mode */
     LCD_DATA0_PORT &= ~_BV(LCD_DATA0_PIN);   // LCD_FUNCTION_4BIT_1LINE>>4
     lcd_e_toggle();
-    delay(LCD_DELAY_INIT_4BIT);          /* some displays need this additional delay */
+    delay(64);           /* some displays need this additional delay */
     
     /* from now the LCD only accepts 4 bit I/O, we can use lcd_command() */    
 #else
@@ -567,13 +602,13 @@ void lcd_init(uint8_t dispAttr)
     MCUCR = _BV(SRE) | _BV(SRW);
 
     /* reset LCD */
-    delay(LCD_DELAY_BOOTUP);                    /* wait 16ms after power-on     */
+    delay(16000);                           /* wait 16ms after power-on     */
     lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */                   
-    delay(LCD_DELAY_INIT);                      /* wait 5ms                     */
+    delay(4992);                            /* wait 5ms                     */
     lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */                 
-    delay(LCD_DELAY_INIT_REP);                  /* wait 64us                    */
+    delay(64);                              /* wait 64us                    */
     lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */                
-    delay(LCD_DELAY_INIT_REP);                  /* wait 64us                    */
+    delay(64);                              /* wait 64us                    */
 #endif
 
 #if KS0073_4LINES_MODE

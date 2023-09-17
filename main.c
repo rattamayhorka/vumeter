@@ -5,20 +5,34 @@
 #include "lcd.h"
 
 #define BAUD 9600
-#define BAUDRATE ((F_CPU) / (BAUD * 8UL) - 1)
-#define BUFFER_SIZE 64
+#define BAUDRATE ((F_CPU)/(BAUD*8UL)-1)
+#define USART_BUFFER_SIZE 19
 
-volatile char buffer[BUFFER_SIZE];
-volatile uint8_t buffer_index = 0;
-volatile uint16_t no_data_timer = 0; // Variable para rastrear el tiempo sin datos
+volatile char usart_buffer[USART_BUFFER_SIZE];
+volatile char received_data;
 
-// Funciones para USART
+volatile uint8_t usart_buffer_index = 0;
+uint8_t lcd_column = 0; // Contador de columna en el LCD
+
+void adc_init(void) {
+    // Configurar el ADC para el pin 0 del puerto A (PA0)
+    ADMUX = (1 << REFS0); // Usar AVCC como referencia y configurar el canal a PA0
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1); // Habilitar ADC y configurar el prescaler
+}
+
+uint16_t adc_read(void) {
+    // Leer el valor del ADC en el pin 0 del puerto A (PA0)
+    ADCSRA |= (1 << ADSC); // Iniciar la conversión
+    while (ADCSRA & (1 << ADSC)); // Esperar a que la conversión termine
+    return ADC; // Devolver el valor convertido
+}
+
 void usart_init(void) {
     // Configurar la velocidad de comunicación en 9600 bps
-    UBRRH = (BAUDRATE >> 8);
+    UBRRH = (BAUDRATE>>8);
     UBRRL = BAUDRATE;
-    // Habilitar la transmisión y la recepción UART
-    UCSRB = (1 << TXEN) | (1 << RXEN);
+    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
+    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie
     // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
 }
@@ -30,37 +44,62 @@ void usart_transmit(unsigned char data) {
     UDR = data;
 }
 
-unsigned char usart_receive(void) {
-    // Esperar a recibir datos
-    while (!(UCSRA & (1 << RXC)));
-    // Reiniciar el temporizador
-    no_data_timer = 0;
-    // Devolver el dato recibido
-    return UDR;
+
+/*
+void usart_receive(void) {
+    while (!(UCSRA & (1 << RXC))); // Esperar a que se reciba un byte
+    char received_data = UDR; // Leer el carácter recibido
+
+    // Almacenar el carácter en el búfer
+    usart_buffer[usart_buffer_index] = received_data;
+    usart_buffer_index++;
+    lcd_putc(received_data);        
+}
+*/
+//Rutina de interrupción para USART (recepción completada)
+ISR(USART_RXC_vect) {
+    char received_data = UDR; // Leer el carácter recibido
+
+    // Almacenar el carácter en el búfer
+    usart_buffer[usart_buffer_index] = received_data;
+    usart_buffer_index++;
+    
+    // Mostrar el carácter en el LCD
+    lcd_putc(received_data);
+}
+
+void set_volume(uint32_t adcValue) {
+    char message[20];
+    // Realizar la conversión de adcValue a un valor de volumen en el rango de 0 a 100
+    uint32_t volume = (uint32_t)((adcValue * 100) / 1024);
+
+    // Construir el mensaje con el valor de volumen
+    sprintf(message, "%ld", volume);
+
+    // Enviar el mensaje por USART
+    for (int i = 0; message[i] != '\0'; i++) {
+        usart_transmit(message[i]);
+    }
 }
 
 int main(void) {
-    lcd_init(LCD_DISP_ON); // Inicializa el LCD HD44780
-    usart_init();
+    DDRC = 0xFF;
+    lcd_init(LCD_DISP_ON);
+    adc_init(); // Inicializar el ADC
+    usart_init(); // Inicializar USART
     lcd_clrscr();
-    lcd_gotoxy(0, 0); // Coloca el cursor en la posición (0,0)
-    lcd_puts("USART to LCD");
-
+    lcd_puts("Bienvenido...");
+    uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
+    sei();
     while (1) {
-        if (UCSRA & (1 << RXC)) {
-            lcd_clrscr(); // Borrar la pantalla LCD
-            lcd_gotoxy(0, 0); // Coloca el cursor en la posición (0,0)
-            const char received_data = usart_receive();
-            lcd_puts(&received_data); // Mostrar el dato en el LCD
+        uint16_t adcValue = adc_read(); // Leer el valor del ADC
+
+        if (adcValue != prevAdcValue) {
+           set_volume(adcValue);
+           usart_transmit('\n');
+           prevAdcValue = adcValue;
         }
-        else {
-            // Incrementar el temporizador si no se ha recibido ningún dato
-            _delay_ms(100); // Esperar 100 ms
-            no_data_timer += 100; // Incrementar el temporizador en 100 ms
-            if (no_data_timer >= 3000) { // Si han pasado 3 segundos sin datos
-                lcd_puts("USART to LCD"); // Vuelve a mostrar el mensaje inicial
-                no_data_timer = 0; // Reiniciar el temporizador
-            }
-        }
+        //usart_receive(); // Leer y procesar el carácter recibido
+        _delay_ms(10); // Esperar 10 ms antes de actualizar la pantalla
     }
 }
