@@ -13,6 +13,7 @@ volatile char received_data;
 
 volatile uint8_t usart_buffer_index = 0;
 uint8_t lcd_column = 0; // Contador de columna en el LCD
+uint32_t prevVolume = 0;  // Un valor que no coincida con ninguna fila válida
 
 void adc_init(void) {
     // Configurar el ADC para el pin 0 del puerto A (PA0)
@@ -44,18 +45,6 @@ void usart_transmit(unsigned char data) {
     UDR = data;
 }
 
-
-/*
-void usart_receive(void) {
-    while (!(UCSRA & (1 << RXC))); // Esperar a que se reciba un byte
-    char received_data = UDR; // Leer el carácter recibido
-
-    // Almacenar el carácter en el búfer
-    usart_buffer[usart_buffer_index] = received_data;
-    usart_buffer_index++;
-    lcd_putc(received_data);        
-}
-*/
 //Rutina de interrupción para USART (recepción completada)
 ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
@@ -72,13 +61,15 @@ void set_volume(uint32_t adcValue) {
     char message[20];
     // Realizar la conversión de adcValue a un valor de volumen en el rango de 0 a 100
     uint32_t volume = (uint32_t)((adcValue * 100) / 1024);
-
-    // Construir el mensaje con el valor de volumen
-    sprintf(message, "%ld", volume);
-
-    // Enviar el mensaje por USART
-    for (int i = 0; message[i] != '\0'; i++) {
-        usart_transmit(message[i]);
+    volume = (uint32_t)volume; // Convierte a uint32_t, para eliminar los decimales
+    if (volume != prevVolume) { //si el valor de volumen no ha cambiado, no lo manda por USART
+        // Construir el mensaje con el valor de volumen
+        sprintf(message, "%ld", volume);
+        // Enviar el mensaje por USART
+        for (int i = 0; message[i] != '\0'; i++) {
+            usart_transmit(message[i]);
+        }
+        prevVolume = volume;
     }
 }
 
@@ -99,7 +90,6 @@ int main(void) {
            usart_transmit('\n');
            prevAdcValue = adcValue;
         }
-        //usart_receive(); // Leer y procesar el carácter recibido
         _delay_ms(10); // Esperar 10 ms antes de actualizar la pantalla
     }
 }
