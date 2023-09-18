@@ -1,10 +1,10 @@
-## vumeter
+# Vumeter
 
-vumeter, es un proyecto con el que puedes mostrar en un LCD hd44780 información como Artista y Cancíon que actualmente se está reproduciendo en CMUS, muy parecido a lo que era LCD Smartie, :D
+vumeter, es un proyecto con el que puedes mostrar en un LCD hd44780 información como Artista y Cancíón que actualmente se está reproduciendo en CMUS, muy parecido a lo que era LCD Smartie, :D
 
 muy pronto trataré de enviar notificaciónes de mensajes, correos etc...
 
-# Conexiones: 
+## Conexiones: 
 
 los pines 3,4,5,6 del atmega, van a los 4 bits mas significativos (4,5,6,7) del lcd 
 
