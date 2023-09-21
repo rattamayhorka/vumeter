@@ -12,8 +12,8 @@ volatile char usart_buffer[USART_BUFFER_SIZE];
 volatile char received_data;
 
 volatile uint8_t usart_buffer_index = 0;
-uint8_t lcd_column = 0; // Contador de columna en el LCD
-uint32_t prevVolume = 0;  // Un valor que no coincida con ninguna fila válida
+uint8_t lcd_column = 0;
+uint32_t prevVolume = 0;
 
 void adc_init(void) {
     // Configurar el ADC para el pin 0 del puerto A (PA0)
@@ -29,45 +29,34 @@ uint16_t adc_read(void) {
 }
 
 void usart_init(void) {
-    // Configurar la velocidad de comunicación en 9600 bps
-    UBRRH = (BAUDRATE>>8);
+    UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
     UBRRL = BAUDRATE;
     // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
-    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie
-    // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
-    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
+    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie para usar como interrupciones
+    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
 }
 
 void usart_transmit(unsigned char data) {
-    // Esperar a que el registro de transmisión esté vacío
-    while (!(UCSRA & (1 << UDRE)));
-    // Enviar el dato
-    UDR = data;
+    while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
+    UDR = data; // Enviar el dato
 }
 
 //Rutina de interrupción para USART (recepción completada)
 ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
-
-    // Almacenar el carácter en el búfer
-    usart_buffer[usart_buffer_index] = received_data;
-    usart_buffer_index++;
-    
-    // Mostrar el carácter en el LCD
-    lcd_putc(received_data);
+    usart_buffer[usart_buffer_index] = received_data; // Almacenar el carácter en el búfer
+    usart_buffer_index++; 
+    lcd_putc(received_data); // Mostrar el carácter en el LCD
 }
 
 void set_volume(uint32_t adcValue) {
     char message[20];
-    // Realizar la conversión de adcValue a un valor de volumen en el rango de 0 a 100
-    uint32_t volume = (uint32_t)((adcValue * 100) / 1024);
+    uint32_t volume = (uint32_t)((adcValue * 100) / 1024); //convierte adcValue a un valor de volumen en el rango de 0 a 100
     volume = (uint32_t)volume; // Convierte a uint32_t, para eliminar los decimales
     if (volume != prevVolume) { //si el valor de volumen no ha cambiado, no lo manda por USART
-        // Construir el mensaje con el valor de volumen
-        sprintf(message, "%ld", volume);
-        // Enviar el mensaje por USART
+        sprintf(message, "%ld", volume); // Construir el mensaje con el valor de volumen
         for (int i = 0; message[i] != '\0'; i++) {
-            usart_transmit(message[i]);
+            usart_transmit(message[i]); // Enviar el mensaje por USART
         }
         prevVolume = volume;
     }
@@ -79,7 +68,15 @@ int main(void) {
     adc_init(); // Inicializar el ADC
     usart_init(); // Inicializar USART
     lcd_clrscr();
-    lcd_puts("Bienvenido...");
+    lcd_gotoxy(0,0);
+    lcd_puts("Bienvenido...       ");
+    lcd_gotoxy(0,1);
+    lcd_puts("vumeter creado por: ");
+    lcd_gotoxy(0,2);
+    lcd_puts("Rattamayhorka       ");
+    lcd_gotoxy(0,3);
+    lcd_puts("septiembre de 2023  ");
+    lcd_gotoxy(0,0);
     uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
     sei();
     while (1) {
