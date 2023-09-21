@@ -37,7 +37,7 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
                 print(output)  # Imprime la salida
                 for char in output:
                     ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
-                    time.sleep(1.015)  # Espera 15 ms entre cada carácter
+                    time.sleep(0.015)  # Espera 15 ms entre cada carácter
                 prev_artist = artist # Actualiza las variables prev_artist y prev_title
                 prev_title = title
         except subprocess.CalledProcessError as e: # Maneja excepciones generadas por el comando cmus-remote

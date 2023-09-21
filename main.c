@@ -14,11 +14,28 @@ volatile char received_data;
 volatile uint8_t usart_buffer_index = 0;
 uint8_t lcd_column = 0;
 uint32_t prevVolume = 0;
+volatile uint8_t timer_counter = 0;
+const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (3 segundos)
 
+void usart_init(void) {
+    UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
+    UBRRL = BAUDRATE;
+    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
+    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie para usar como interrupciones
+    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
+}
 void adc_init(void) {
     // Configurar el ADC para el pin 0 del puerto A (PA0)
     ADMUX = (1 << REFS0); // Usar AVCC como referencia y configurar el canal a PA0
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1); // Habilitar ADC y configurar el prescaler
+}
+
+void timer_init(void) {
+    // Configura el temporizador (ajusta según tu microcontrolador)
+    // En el ejemplo, se usa el temporizador 1 (TIMER1)
+    TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler de 1024
+    TCNT1 = 0; // Inicializa el contador
+    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
 
 uint16_t adc_read(void) {
@@ -28,13 +45,6 @@ uint16_t adc_read(void) {
     return ADC; // Devolver el valor convertido
 }
 
-void usart_init(void) {
-    UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
-    UBRRL = BAUDRATE;
-    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
-    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie para usar como interrupciones
-    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
-}
 
 void usart_transmit(unsigned char data) {
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
@@ -45,8 +55,18 @@ void usart_transmit(unsigned char data) {
 ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
     usart_buffer[usart_buffer_index] = received_data; // Almacenar el carácter en el búfer
-    usart_buffer_index++; 
+    usart_buffer_index++;
     lcd_putc(received_data); // Mostrar el carácter en el LCD
+    timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
+}
+
+// Rutina de interrupción para el desbordamiento del temporizador
+ISR(TIMER1_OVF_vect) {
+    timer_counter++;
+    if (timer_counter >= ResetThreshold) {
+        // Si han pasado 3 segundos sin recibir datos, realiza una acción (por ejemplo, ir al inicio del LCD)
+        lcd_clrscr();
+    }
 }
 
 void set_volume(uint32_t adcValue) {
@@ -75,6 +95,7 @@ int main(void) {
     _delay_ms(5000);
     lcd_gotoxy(0,0);
     lcd_clrscr();
+    timer_init();
     uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
     sei();
     while (1) {
