@@ -68,15 +68,13 @@ int main(void) {
     adc_init(); // Inicializar el ADC
     usart_init(); // Inicializar USART
     lcd_clrscr();
+    lcd_gotoxy(0,0);lcd_puts("Bienvenido...");
+    lcd_gotoxy(0,1);lcd_puts("'vumeter' creado por:");
+    lcd_gotoxy(0,2);lcd_puts("rattamayhorka");
+    lcd_gotoxy(0,3);lcd_puts("Septiembre - 2023");
+    _delay_ms(5000);
     lcd_gotoxy(0,0);
-    lcd_puts("Bienvenido...       ");
-    lcd_gotoxy(0,1);
-    lcd_puts("vumeter creado por: ");
-    lcd_gotoxy(0,2);
-    lcd_puts("Rattamayhorka       ");
-    lcd_gotoxy(0,3);
-    lcd_puts("septiembre de 2023  ");
-    lcd_gotoxy(0,0);
+    lcd_clrscr();
     uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
     sei();
     while (1) {

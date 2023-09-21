@@ -4,7 +4,7 @@ import time
 import threading
 
 def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de espera de la transmision
-    prev_artist = "" 
+    prev_artist = ""
     prev_title = ""
     while True:
         try:
@@ -14,18 +14,30 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
                 text=True  # Asegura que la salida sea una cadena de texto (str)
             ).strip()  # Elimina espacios en blanco al principio y al final
 
-            # Ejecuta el comando y captura la salida estándar
             title = subprocess.check_output(
                 'cmus-remote -Q 2> /dev/null | grep "tag title " | cut -c11-',
                 shell=True,
                 text=True
             ).strip() 
+
+            album = subprocess.check_output(
+                'cmus-remote -Q 2> /dev/null | grep "tag album " | cut -c11-',
+                shell=True,
+                text=True
+            ).strip()
+
+            tag_date = subprocess.check_output(
+                'cmus-remote -Q 2> /dev/null | grep "tag date " | cut -c10-',
+                shell=True,
+                text=True
+            ).strip()
+
             if artist != prev_artist or title != prev_title: # Verifica si artist o title han cambiado
-                output = f"Now playing: \n{artist} - {title} "  # Concatena la información
+                output = f"Artist:{artist}\nTrack:{title}\nAlbum:{album}\nYear:{tag_date}\n\n"  # Concatena la información
                 print(output)  # Imprime la salida
                 for char in output:
                     ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
-                    time.sleep(0.015)  # Espera 15 ms entre cada carácter
+                    time.sleep(1.015)  # Espera 15 ms entre cada carácter
                 prev_artist = artist # Actualiza las variables prev_artist y prev_title
                 prev_title = title
         except subprocess.CalledProcessError as e: # Maneja excepciones generadas por el comando cmus-remote
@@ -36,11 +48,11 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
             # Maneja otras excepciones
             print(f"Error inesperado: {e}")
 
-        time.sleep(1) #espera un segundo para verificar si cambió la canción 
+        time.sleep(1) #espera un segundo para verificar si cambió la canción
 
 ser = serial.Serial('/dev/ttyUSB1', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
 
-# llamada de funcion / tipo interrupcion 
+# llamada de funcion / tipo interrupcion
 activo_thread = threading.Thread(target=enviar_activo)
 activo_thread.daemon = True  # El hilo se detendrá cuando el programa principal termine
 activo_thread.start()
