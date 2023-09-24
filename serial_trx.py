@@ -33,7 +33,8 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
             ).strip()
 
             if artist != prev_artist or title != prev_title: # Verifica si artist o title han cambiado
-                output = f"Artist:{artist}\nTrack:{title}\nAlbum:{album}\nYear:{tag_date}\n\n"  # Concatena la información
+                #output = f"/Artist:{artist}\nTrack:{title}\nAlbum:{album}\nYear:{tag_date}\n\n¬"  # Concatena la información
+                output = f"\a{artist}\n{title}\v"  # Concatena la información
                 print(output)  # Imprime la salida
                 for char in output:
                     ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial

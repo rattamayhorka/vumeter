@@ -45,7 +45,6 @@ uint16_t adc_read(void) {
     return ADC; // Devolver el valor convertido
 }
 
-
 void usart_transmit(unsigned char data) {
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
     UDR = data; // Enviar el dato
@@ -54,10 +53,21 @@ void usart_transmit(unsigned char data) {
 //Rutina de interrupción para USART (recepción completada)
 ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
-    usart_buffer[usart_buffer_index] = received_data; // Almacenar el carácter en el búfer
-    usart_buffer_index++;
-    lcd_putc(received_data); // Mostrar el carácter en el LCD
-    timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
+    if (received_data == '\a'){
+        lcd_clrscr();
+    }
+    else if (received_data == '\v'){
+        lcd_home();
+    }
+    else if (received_data == '\n'){
+        lcd_gotoxy(0,1);
+    }
+    else{
+        usart_buffer[usart_buffer_index] = received_data; // Almacenar el carácter en el búfer
+        usart_buffer_index++;
+        lcd_putc(received_data); // Mostrar el carácter en el LCD
+        timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
+    }
 }
 
 // Rutina de interrupción para el desbordamiento del temporizador
