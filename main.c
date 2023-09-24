@@ -2,6 +2,8 @@
 #include <util/delay.h>
 #include <stdio.h>
 #include <avr/interrupt.h>
+#include <string.h>
+
 #include "lcd.h"
 
 #define BAUD 9600
@@ -49,6 +51,12 @@ void usart_transmit(unsigned char data) {
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
     UDR = data; // Enviar el dato
 }
+
+char artist[50] = ""; // Variable para almacenar el artista
+char title[50] = "";  // Variable para almacenar el título
+char year[5] = "";    // Variable para almacenar el año
+char album[50] = "";  // Variable para almacenar el álbum
+int state = 0;        // Estado actual del analizador
 
 //Rutina de interrupción para USART (recepción completada)
 ISR(USART_RXC_vect) {
