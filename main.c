@@ -10,7 +10,7 @@
 #define BAUDRATE ((F_CPU)/(BAUD*8UL)-1)
 #define USART_BUFFER_SIZE 19
 
-volatile char usart_buffer[USART_BUFFER_SIZE];
+volatile char artist_buffer[USART_BUFFER_SIZE];
 volatile char received_data;
 
 volatile uint8_t usart_buffer_index = 0;
@@ -19,6 +19,12 @@ uint32_t prevVolume = 0;
 volatile uint8_t timer_counter = 0;
 const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (3 segundos)
 
+char artist[50] = ""; // Variable para almacenar el artista
+char title[50] = "";  // Variable para almacenar el título
+char year[5] = "";    // Variable para almacenar el año
+char album[50] = "";  // Variable para almacenar el álbum
+int state = 0;        // Estado actual del analizador
+uint8_t lcd_y = 0;
 void usart_init(void) {
     UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
     UBRRL = BAUDRATE;
@@ -51,33 +57,50 @@ void usart_transmit(unsigned char data) {
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
     UDR = data; // Enviar el dato
 }
-
-char artist[50] = ""; // Variable para almacenar el artista
-char title[50] = "";  // Variable para almacenar el título
-char year[5] = "";    // Variable para almacenar el año
-char album[50] = "";  // Variable para almacenar el álbum
-int state = 0;        // Estado actual del analizador
+void lcd_print(void){
+    // Mostrar todo el contenido del buffer en el LCD
+    lcd_puts(artist_buffer);
+    lcd_gotoxy(0,lcd_y);
+    // Reiniciar el buffer
+    artist_buffer[0] = '\0';
+    usart_buffer_index = 0;
+}
 
 //Rutina de interrupción para USART (recepción completada)
 ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
+
     if (received_data == '\a'){
         lcd_clrscr();
+        lcd_y = 0;
     }
-    else if (received_data == '\v'){
-        lcd_home();
-    }
+    
+    //else if (received_data == '\v'){
+    //    lcd_home();
+    //}
+
     else if (received_data == '\n'){
-        lcd_gotoxy(0,1);
+    lcd_gotoxy(0,lcd_y);
+    lcd_y = 1;
+    lcd_print();
     }
-    else{
-        usart_buffer[usart_buffer_index] = received_data; // Almacenar el carácter en el búfer
+
+    else {
+        
+        // Almacenar el carácter en el búfer
+        artist_buffer[usart_buffer_index] = received_data;
         usart_buffer_index++;
-        lcd_putc(received_data); // Mostrar el carácter en el LCD
+
+        // Asegurarse de que el buffer no exceda su tamaño máximo
+        if (usart_buffer_index >= sizeof(artist_buffer)) {
+            usart_buffer_index = sizeof(artist_buffer) - 1;
+        }
+
+        // Terminar la cadena en el buffer para que sea una cadena válida de C
+        artist_buffer[usart_buffer_index] = '\0';
         timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
     }
 }
-
 // Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect) {
     timer_counter++;
@@ -87,6 +110,7 @@ ISR(TIMER1_OVF_vect) {
     }
 }
 
+//funcion de manejo de volumen
 void set_volume(uint32_t adcValue) {
     char message[20];
     uint32_t volume = (uint32_t)((adcValue * 100) / 1024); //convierte adcValue a un valor de volumen en el rango de 0 a 100
@@ -100,7 +124,7 @@ void set_volume(uint32_t adcValue) {
     }
 }
 
-int main(void) {
+void boot(void){
     DDRC = 0xFF;
     lcd_init(LCD_DISP_ON);
     adc_init(); // Inicializar el ADC
@@ -114,8 +138,12 @@ int main(void) {
     lcd_gotoxy(0,0);
     lcd_clrscr();
     timer_init();
-    uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
     sei();
+}
+
+int main(void) {
+    boot();
+    uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
     while (1) {
         uint16_t adcValue = adc_read(); // Leer el valor del ADC
 
