@@ -82,7 +82,6 @@ ISR(USART_RXC_vect) {
     else if (received_data == '\n'){
     lcd_gotoxy(0,lcd_y);
     lcd_y = 1;
-    lcd_print();
     }
 
     else {
@@ -100,13 +99,15 @@ ISR(USART_RXC_vect) {
         artist_buffer[usart_buffer_index] = '\0';
         timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
     }
+    lcd_print();
 }
 // Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect) {
     timer_counter++;
     if (timer_counter >= ResetThreshold) {
         // Si han pasado 3 segundos sin recibir datos, realiza una acción (por ejemplo, ir al inicio del LCD)
-        lcd_clrscr();
+            lcd_gotoxy(0,0);
+            //lcd_puts("ahorro...");
     }
 }
 
