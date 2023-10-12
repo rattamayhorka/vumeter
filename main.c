@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <avr/interrupt.h>
 #include <string.h>
-#include "lcd.h"
+#include "oled.h"
 
 #define BAUD 9600
-#define BAUDRATE ((F_CPU)/(BAUD*8UL)-1)
+#define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
 #define USART_BUFFER_SIZE 21
 #define NUM_BUFFERS 3 // Número de buffers (artist, title, album)
 
@@ -17,22 +17,21 @@ volatile char album_buffer[USART_BUFFER_SIZE];
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer};
 int current_buffer_index = 0;
 
-volatile char received_data;
 volatile uint8_t usart_buffer_index = 0;
 volatile uint8_t timer_counter = 0;
 
 const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (3 segundos)
 
 uint32_t prevVolume = 0;
-uint8_t var_index = 0;
 
 void usart_init(void) {
     UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
     UBRRL = BAUDRATE;
     // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
     UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie para usar como interrupciones
-    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de trama: 8 bits de datos, 1 bit de parada
+    UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de 
 }
+
 void adc_init(void) {
     // Configurar el ADC para el pin 0 del puerto A (PA0)
     ADMUX = (1 << REFS0); // Usar AVCC como referencia y configurar el canal a PA0
@@ -59,21 +58,21 @@ void usart_transmit(unsigned char data) {
     UDR = data; // Enviar el dato
 }
 
-void lcd_print(void) {
+void OLED_print(void) {
     // Borra la pantalla LCD
-    lcd_clrscr();
+    OLED_clrscr();
     
     // Muestra el contenido de artist_buffer en la primera línea
-    lcd_gotoxy(0, 0);
-    lcd_puts((char *)artist_buffer);
+    OLED_gotoxy(0, 0);
+    OLED_Puts((char *)artist_buffer);
     
     // Muestra el contenido de title_buffer en la segunda línea
-    lcd_gotoxy(0, 1);
-    lcd_puts((char *)title_buffer);
+    OLED_gotoxy(0, 1);
+    OLED_Puts((char *)title_buffer);
     
     // Muestra el contenido de album_buffer en la tercera línea
-    lcd_gotoxy(0, 2);
-    lcd_puts((char *)album_buffer);
+    OLED_gotoxy(0, 2);
+    OLED_Puts((char *)album_buffer);
 
     // Reinicia los buffers y el índice
     artist_buffer[0] = '\0';
@@ -88,7 +87,7 @@ ISR(USART_RXC_vect) {
 
     if (received_data == '\a') {
         // Borrar la pantalla LCD cuando se recibe '\a'
-        lcd_clrscr();
+        OLED_clrscr();
         usart_buffer_index = 0;
     } else if (received_data == '\n') {
         // Cambiar al siguiente buffer cuando se recibe '\n'
@@ -96,7 +95,7 @@ ISR(USART_RXC_vect) {
 
         // Si current_buffer_index es igual al número de buffers, significa que se han completado todos
         if (current_buffer_index == NUM_BUFFERS) {
-            lcd_print();
+            OLED_print();
         } else {
             usart_buffer_index = 0; // Reiniciar el índice del buffer actual
         }
@@ -141,33 +140,34 @@ void set_volume(uint32_t adcValue) {
 }
 
 void boot(void){
-    DDRC = 0xFF;
-    lcd_init(LCD_DISP_ON);
-    adc_init(); // Inicializar el ADC
-    usart_init(); // Inicializar USART
-    lcd_clrscr();
-    lcd_gotoxy(0,0);lcd_puts("Bienvenido...");
-    lcd_gotoxy(0,1);lcd_puts("'vumeter' creado por:");
-    lcd_gotoxy(0,2);lcd_puts("rattamayhorka");
-    lcd_gotoxy(0,3);lcd_puts("Sep - 25 - 2023");
-    _delay_ms(5000);
-    lcd_gotoxy(0,0);
-    lcd_clrscr();
-    timer_init();
-    sei();
+  DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1) | (1 << PB0);
+  DDRC = 0xFF;
+  OLED_Init();
+  adc_init(); // Inicializar el ADC
+  usart_init(); // Inicializar USART
+  OLED_clrscr();
+  OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
+  OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
+  OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
+  OLED_gotoxy(0,3); OLED_Puts("Oct - 11 - 2023");
+  _delay_ms(5000);
+  OLED_gotoxy(0,0);
+  OLED_clrscr();
+  timer_init();
+  sei();
 }
 
-int main(void) {
-    boot();
-    uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
-    while (1) {
-        uint16_t adcValue = adc_read(); // Leer el valor del ADC
-
-        if (adcValue != prevAdcValue) {
+int main(void){
+  boot();
+  uint16_t prevAdcValue = 255;  // Un valor que no coincida con ninguna fila válida
+  while (1){
+    uint16_t adcValue = adc_read(); // Leer el valor del ADC
+    
+    if (adcValue != prevAdcValue){
            set_volume(adcValue);
            usart_transmit('\n');
            prevAdcValue = adcValue;
-        }
-        _delay_ms(10); // Esperar 10 ms antes de actualizar la pantalla
     }
+    _delay_ms(10); // Esperar 10 ms antes de actualizar la pantalla
+  }
 }

@@ -1,6 +1,6 @@
 # MCU name
 MCU = atmega32
-F_CPU = 4000000
+F_CPU = 8000000
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex 
@@ -15,7 +15,7 @@ OPT = s
 
 # List C source files here. (C dependencies are automatically generated.)
 
-SRC = main.c lcd.c
+SRC = main.c oled.c
 
 # List Assembler source files here.
 # Make them always end in a capital .S.  Files ending in a lowercase .s
@@ -207,8 +207,8 @@ full: $(TARGET).hex $(TARGET).eep
 
 burn-fuse: 
 
-
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -v -U lfuse:w:0xFF:m -U hfuse:w:0x99:m 
+#for internal cristal at 8MHz -v -U lfuse:w:0xDD:m -U hfuse:w:0xD9:m -U lock:w:0xFF:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -v -U lfuse:w:0xFD:m -U hfuse:w:0x99:m 
 
 read-fuse:
 
