@@ -8,14 +8,16 @@
 #define BAUD 9600
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
 #define USART_BUFFER_SIZE 21
-#define NUM_BUFFERS 3 // Número de buffers (artist, title, album)
+#define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
 
 volatile char artist_buffer[USART_BUFFER_SIZE];
 volatile char title_buffer[USART_BUFFER_SIZE];
 volatile char album_buffer[USART_BUFFER_SIZE];
+volatile char year_buffer[USART_BUFFER_SIZE];
+
 volatile uint8_t usart_buffer_index = 0;
 
-volatile char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer};
+volatile char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 int current_buffer_index = 0;
 
 volatile uint8_t timer_counter = 0;
@@ -72,11 +74,14 @@ void OLED_print(void){
     // Muestra el contenido de album_buffer en la tercera línea
     OLED_gotoxy(0, 2);
     OLED_Puts((char *)album_buffer);
-
+    
+    OLED_gotoxy(0, 3);
+    OLED_Puts((char *)year_buffer);
     // Reinicia los buffers y el índice
     artist_buffer[0] = '\0';
     title_buffer[0] = '\0';
     album_buffer[0] = '\0';
+    year_buffer[0] = '\0';
     usart_buffer_index = 0;
     current_buffer_index = 0;
 }
@@ -148,7 +153,7 @@ void boot(void){ //funcion de inicio
   OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
   OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
   OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-  OLED_gotoxy(0,3); OLED_Puts("Oct - 12 - 2023");
+  OLED_gotoxy(0,3); OLED_Puts("OCT-16-2023 00:00-PM");
   _delay_ms(5000);
   OLED_gotoxy(0,0);
   OLED_clrscr();

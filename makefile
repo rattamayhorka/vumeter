@@ -98,19 +98,21 @@ LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
 # to get a full listing.
 #
 #AVRDUDE_PROGRAMMER = dt006
-AVRDUDE_PROGRAMMER = stk500
+AVRDUDE_PROGRAMMER = arduino
 #AVRDUDE_PROGRAMMER = usbtiny
 
 
 #AVRDUDE_PORT = com1	   # programmer connected to serial device
 #AVRDUDE_PORT = /dev/cu.KeySerial1	   # programmer connected to serial device
+#AVRDUDE_PORT = /dev/ttyACM0 		   #for original arduino uno 
 AVRDUDE_PORT = /dev/ttyUSB0
 #AVRDUDE_PORT = lpt1	# programmer connected to parallel port
 
+BAUDRATE = 9600
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
+AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -b $(BAUDRATE)
 
 # Uncomment the following if you want avrdude's erase cycle counter.
 # Note that this counter needs to be initialized first using -Yn,
@@ -194,26 +196,25 @@ ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
-
+#Ext Crystal/Resonator, Medium Freq, 16K CK + 64ms l-0xFD h-0x99 
 # Default target.
 all: begin gccversion sizebefore $(TARGET).elf $(TARGET).hex $(TARGET).eep \
 	$(TARGET).lss $(TARGET).sym sizeafter finished end
 
 full: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xFF:m -u -U hfuse:w:0x99:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xFD:m -u -U hfuse:w:0x99:m
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -U flash:w:$< 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -U eeprom:w:iveep.hex
 
 
 burn-fuse: 
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xFD:m -u -U hfuse:w:0x99:m
 
-#for internal cristal at 8MHz -v -U lfuse:w:0xDD:m -U hfuse:w:0xD9:m -U lock:w:0xFF:m
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -v -U lfuse:w:0xFD:m -U hfuse:w:0x99:m 
 
 read-fuse:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h
 
 
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:r:-:h -U hfuse:r:-:h
 reset:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) 
 

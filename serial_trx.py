@@ -34,7 +34,7 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
             ).strip()
 
             if artist != prev_artist or title != prev_title: # Verifica si artist o title han cambiado
-                output = f"\a{artist}\n{title}\n{album}\n{tag_date}"  # Concatena la información
+                output = f"\a{artist}\n{title}\n{album}\n\x11{tag_date}\x10\n"  # Concatena la información
                 #output = f"\a{artist}\n{title}\n{album}"  # Concatena la información
 
                 unicd_output = unidecode(output)                
@@ -54,7 +54,8 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
 
         time.sleep(1) #espera un segundo para verificar si cambió la canción
 
-ser = serial.Serial('/dev/ttyUSB1', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
+#ser = serial.Serial('/dev/ttyUSB1', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
+ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
 
 # llamada de funcion / tipo interrupcion
 activo_thread = threading.Thread(target=enviar_activo)
