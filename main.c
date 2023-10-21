@@ -9,7 +9,7 @@
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
 #define USART_BUFFER_SIZE 21
 #define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
-
+#define HISTERESIS 3 // Número que se maneja para eliminar el error en la entrada del ADC 
 volatile char artist_buffer[USART_BUFFER_SIZE];
 volatile char title_buffer[USART_BUFFER_SIZE];
 volatile char album_buffer[USART_BUFFER_SIZE];
@@ -21,7 +21,7 @@ volatile char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer
 int current_buffer_index = 0;
 
 volatile uint8_t timer_counter = 0;
-const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (3 segundos)
+const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
 
 uint32_t prevVolume = 0;
 
@@ -123,10 +123,10 @@ ISR(USART_RXC_vect){
 
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
-    timer_counter++;
-    if (timer_counter >= ResetThreshold){
-        // Si han pasado 3 segundos sin recibir datos, realiza una acción (por ejemplo, ir al inicio del LCD)
-    }
+   timer_counter++;
+   if (timer_counter >= ResetThreshold){
+      PORTB ^= (1<<PB0);
+   }
 }
 
 //funcion de manejo de volumen
@@ -153,12 +153,13 @@ void boot(void){ //funcion de inicio
   OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
   OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
   OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-  OLED_gotoxy(0,3); OLED_Puts("OCT-16-2023 00:00-PM");
+  OLED_gotoxy(0,3); OLED_Puts("OCT-20-2023 22:52-PM");
   _delay_ms(5000);
   OLED_gotoxy(0,0);
   OLED_clrscr();
   timer_init();
   sei();
+  PORTB |= (1 << PB0);
 }
 
 int main(void){
@@ -167,11 +168,11 @@ int main(void){
   while (1){
     uint16_t adcValue = adc_read();
     
-    if (adcValue != prevAdcValue){  //transmite unicamente cuando cambia de valor el ADC
-           set_volume(adcValue);
-           usart_transmit('\n');
-           prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
+    if (adcValue + HISTERESIS < prevAdcValue || adcValue - HISTERESIS > prevAdcValue ){  //transmite unicamente cuando cambia de valor el ADC
+      set_volume(adcValue);
+      usart_transmit('\n');
+      prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
     }
-    _delay_ms(10);
+    _delay_ms(30);
   }
 }
