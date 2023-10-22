@@ -38,15 +38,7 @@ void adc_init(void){
     ADMUX = (1 << REFS0); // Usar AVCC como referencia y configurar el canal a PA0
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1); // Habilitar ADC y configurar el prescaler
 }
-/*
-void timer_init(void){
 
-    TCCR1B |= (1 << CS12); // Prescaler de 1024
-
-    TCNT1 = 0; // Inicializa el contador
-    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
-}
-*/
 void timer_init(void) {
     // Configura el prescaler a 64
     TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
@@ -72,14 +64,13 @@ void OLED_print(void){
     uint8_t i;
     // Borra la pantalla LCD
     OLED_clrscr();
-    for(i=0;i<30;i++){
+    for(i=0;i<20;i++){
 
 
     OLED_Command(0x28); // Function Set (fundamental command set)
-    //OLED_Command(0x1F); // Function Set (fundamental command set)
     OLED_Command(0x18); // Function Set (fundamental command set)
     OLED_Command(0x78); // Function Set (fundamental command set)
-
+    
     // Muestra el contenido de artist_buffer en la primera línea
     OLED_gotoxy(0, 0);
     OLED_Puts((char *)artist_buffer);
@@ -101,9 +92,9 @@ void OLED_print(void){
     year_buffer[0] = '\0';
     usart_buffer_index = 0;
     current_buffer_index = 0;
-    OLED_gotoxy(0, 0);
     _delay_ms(400);
     }
+    OLED_gotoxy(0, 0);
 
 }
 
@@ -144,10 +135,8 @@ ISR(USART_RXC_vect){
 
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
-   timer_counter++;
-   //if (timer_counter >= ResetThreshold){
-      PORTB ^= (1<<PB0);
-   //}
+    timer_counter++;
+    PORTB ^= (1<<PB0);
 }
 
 //funcion de manejo de volumen

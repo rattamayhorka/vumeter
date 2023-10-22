@@ -142,9 +142,10 @@ void OLED_Home(void){
   OLED_Command(0x02); // Return Home (0,0)
 }
 
-void OLED_Puts(const char *s)
-/* print string on lcd (no auto linefeed) */
-{
+
+void OLED_Puts(const char *s){
+// print string on lcd (no auto linefeed)
+
     register char c;
 
     while ( (c = *s++) ) {
@@ -152,6 +153,3 @@ void OLED_Puts(const char *s)
     }
 
 }
-
-
-
