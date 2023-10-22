@@ -35,7 +35,6 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
 
             if artist != prev_artist or title != prev_title: # Verifica si artist o title han cambiado
                 output = f"\a{artist}\n{title}\n{album}\n\x11{tag_date}\x10\n"  # Concatena la información
-                #output = f"\a{artist}\n{title}\n{album}"  # Concatena la información
 
                 unicd_output = unidecode(output)                
                 print(unicd_output)  # Imprime la salida

@@ -45,7 +45,6 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
 
         time.sleep(1) #espera un segundo para verificar si cambió la canción
 
-#ser = serial.Serial('/dev/ttyUSB1', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
 ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
 
 # llamada de funcion / tipo interrupcion

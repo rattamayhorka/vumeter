@@ -7,17 +7,17 @@
 
 #define BAUD 9600
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
-#define USART_BUFFER_SIZE 21
+#define USART_BUFFER_SIZE 40
 #define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
 #define HISTERESIS 1 // Número que se maneja para eliminar el error en la entrada del ADC 
-volatile char artist_buffer[USART_BUFFER_SIZE];
-volatile char title_buffer[USART_BUFFER_SIZE];
-volatile char album_buffer[USART_BUFFER_SIZE];
-volatile char year_buffer[USART_BUFFER_SIZE];
+char artist_buffer[USART_BUFFER_SIZE];
+char title_buffer[USART_BUFFER_SIZE];
+char album_buffer[USART_BUFFER_SIZE];
+char year_buffer[USART_BUFFER_SIZE];
 
 volatile uint8_t usart_buffer_index = 0;
 
-volatile char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
+char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 int current_buffer_index = 0;
 
 volatile uint8_t timer_counter = 0;
@@ -38,15 +38,22 @@ void adc_init(void){
     ADMUX = (1 << REFS0); // Usar AVCC como referencia y configurar el canal a PA0
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1); // Habilitar ADC y configurar el prescaler
 }
-
+/*
 void timer_init(void){
-    // Configura el temporizador (ajusta según tu microcontrolador)
-    // En el ejemplo, se usa el temporizador 1 (TIMER1)
-    TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler de 1024
+
+    TCCR1B |= (1 << CS12); // Prescaler de 1024
+
     TCNT1 = 0; // Inicializa el contador
-    //TCNT1 = (1024 / (F_CPU / 2)) - 1;
-    
-       TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
+    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
+}
+*/
+void timer_init(void) {
+    // Configura el prescaler a 64
+    TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
+
+    TCNT1 = 65472; // (65536 - 64) para 1 Hz
+
+    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
 
 uint16_t adc_read(void){
@@ -62,9 +69,17 @@ void usart_transmit(unsigned char data) {
 }
 
 void OLED_print(void){
+    uint8_t i;
     // Borra la pantalla LCD
     OLED_clrscr();
-    
+    for(i=0;i<30;i++){
+
+
+    OLED_Command(0x28); // Function Set (fundamental command set)
+    //OLED_Command(0x1F); // Function Set (fundamental command set)
+    OLED_Command(0x18); // Function Set (fundamental command set)
+    OLED_Command(0x78); // Function Set (fundamental command set)
+
     // Muestra el contenido de artist_buffer en la primera línea
     OLED_gotoxy(0, 0);
     OLED_Puts((char *)artist_buffer);
@@ -87,6 +102,9 @@ void OLED_print(void){
     usart_buffer_index = 0;
     current_buffer_index = 0;
     OLED_gotoxy(0, 0);
+    _delay_ms(400);
+    }
+
 }
 
 ISR(USART_RXC_vect){
@@ -127,9 +145,9 @@ ISR(USART_RXC_vect){
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
    timer_counter++;
-   if (timer_counter >= ResetThreshold){
+   //if (timer_counter >= ResetThreshold){
       PORTB ^= (1<<PB0);
-   }
+   //}
 }
 
 //funcion de manejo de volumen
@@ -156,7 +174,7 @@ void boot(void){ //funcion de inicio
   OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
   OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
   OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-  OLED_gotoxy(0,3); OLED_Puts("OCT-21-2023 18:17 PM");
+  OLED_gotoxy(0,3); OLED_Puts("OCT-22-2023 11:05 AM");
   _delay_ms(5000);
   OLED_gotoxy(0,0);
   OLED_clrscr();

@@ -30,12 +30,6 @@ extern uint8_t _rowOffsets[4] = {0x00,0x20,0x40,0x60};
 
 #define SET_DDRAM_ADDR 0x80
 
-
-//_rowOffsets[0] = 0x00;
-//_rowOffsets[1] = 0x20;
-//_rowOffsets[2] = 0x40;
-//_rowOffsets[3] = 0x60;
-
 void putData (uint8_t data){
   for (int m = 0; m < 8; m++){
     if ((data & 0x01) == 0x01){ // Comapring the LSB i.e. (0000 0001)
