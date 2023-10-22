@@ -9,7 +9,7 @@
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
 #define USART_BUFFER_SIZE 21
 #define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
-#define HISTERESIS 3 // Número que se maneja para eliminar el error en la entrada del ADC 
+#define HISTERESIS 1 // Número que se maneja para eliminar el error en la entrada del ADC 
 volatile char artist_buffer[USART_BUFFER_SIZE];
 volatile char title_buffer[USART_BUFFER_SIZE];
 volatile char album_buffer[USART_BUFFER_SIZE];
@@ -44,7 +44,9 @@ void timer_init(void){
     // En el ejemplo, se usa el temporizador 1 (TIMER1)
     TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler de 1024
     TCNT1 = 0; // Inicializa el contador
-    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
+    //TCNT1 = (1024 / (F_CPU / 2)) - 1;
+    
+       TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
 
 uint16_t adc_read(void){
@@ -84,6 +86,7 @@ void OLED_print(void){
     year_buffer[0] = '\0';
     usart_buffer_index = 0;
     current_buffer_index = 0;
+    OLED_gotoxy(0, 0);
 }
 
 ISR(USART_RXC_vect){
@@ -153,7 +156,7 @@ void boot(void){ //funcion de inicio
   OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
   OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
   OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-  OLED_gotoxy(0,3); OLED_Puts("OCT-18-2023 00:00-PM");
+  OLED_gotoxy(0,3); OLED_Puts("OCT-21-2023 18:17 PM");
   _delay_ms(5000);
   OLED_gotoxy(0,0);
   OLED_clrscr();
@@ -168,11 +171,13 @@ int main(void){
   while (1){
     uint16_t adcValue = adc_read();
     
-    if (adcValue + HISTERESIS < prevAdcValue || adcValue - HISTERESIS > prevAdcValue ){  //transmite unicamente cuando cambia de valor el ADC
+    if (adcValue + HISTERESIS <= prevAdcValue || adcValue - HISTERESIS >= prevAdcValue ){  //transmite unicamente cuando cambia de valor el ADC
       set_volume(adcValue);
       usart_transmit('\n');
-      prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
+    //  prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
     }
-    _delay_ms(30);
+    prevAdcValue = adcValue +2 ; //mantiene el valor de ADC para no enviar ruido
+    
+    _delay_ms(100);
   }
 }

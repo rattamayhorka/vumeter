@@ -108,7 +108,8 @@ AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_PORT = /dev/ttyUSB0
 #AVRDUDE_PORT = lpt1	# programmer connected to parallel port
 
-BAUDRATE = 9600
+#BAUDRATE = 9600
+BAUDRATE = 115200
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 

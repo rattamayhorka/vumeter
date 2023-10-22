@@ -25,10 +25,13 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
             process.terminate()
 
             if youtube_title != prev_youtube_title:
-                output = f"\anow playing:\n{youtube_title}\n\n\n"  # Concatena la información
+                output = f"\aNow playing:\n{youtube_title}\n\n\n"  # Concatena la información
             
+                unicd_output = unidecode(output)                
+                #print(unicd_output)  # Imprime la salida
                 print(youtube_title)  # Imprime la salida
-                for char in output:
+                for char in unicd_output:
+                #for char in output:
                     ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
                     time.sleep(0.015)  # Espera 15 ms entre cada carácter  
                 prev_youtube_title = youtube_title
