@@ -7,7 +7,7 @@
 
 #define BAUD 9600
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
-#define USART_BUFFER_SIZE 40
+#define USART_BUFFER_SIZE 50
 #define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
 #define HISTERESIS 1 // Número que se maneja para eliminar el error en la entrada del ADC 
 char artist_buffer[USART_BUFFER_SIZE];
@@ -55,36 +55,39 @@ uint16_t adc_read(void){
     return ADC; // Devolver el valor convertido
 }
 
-void usart_transmit(unsigned char data) {
+void usart_transmit(unsigned char data){
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
     UDR = data; // Enviar el dato
 }
 
-void OLED_print(void){
-    uint8_t i;
+// Función para desplazar un buffer hacia la derecha en un ciclo infinito
+void scrollBuffer(char *buffer, int bufferSize) {
+    if (strlen(buffer) <= bufferSize) {
+        return;  // No hay necesidad de desplazar si el buffer es igual o menor al tamaño deseado
+    }
+
+    int len = strlen(buffer);
+    char temp[21];  // Buffer temporal para el desplazamiento
+    for (int i = 0; i <= len; i++) {
+        strncpy(temp, buffer + i, bufferSize);  // Copia el siguiente segmento de 20 caracteres
+        temp[bufferSize] = '\0';  // Asegura que sea una cadena válida de C
+        OLED_gotoxy(0, 0);
+        OLED_Puts(temp);
+        _delay_ms(400);  // Pausa antes de desplazar
+    }
+    
+}
+
+void OLED_print(void) {
     // Borra la pantalla LCD
     OLED_clrscr();
-    for(i=0;i<20;i++){
+    
+    // Desplazar los buffers si su longitud es mayor a 20 caracteres
+    scrollBuffer(artist_buffer, 20);
+    scrollBuffer(title_buffer, 20);
+    scrollBuffer(album_buffer, 20);
+    scrollBuffer(year_buffer, 20);
 
-
-    OLED_Command(0x28); // Function Set (fundamental command set)
-    OLED_Command(0x18); // Function Set (fundamental command set)
-    OLED_Command(0x78); // Function Set (fundamental command set)
-    
-    // Muestra el contenido de artist_buffer en la primera línea
-    OLED_gotoxy(0, 0);
-    OLED_Puts((char *)artist_buffer);
-    
-    // Muestra el contenido de title_buffer en la segunda línea
-    OLED_gotoxy(0, 1);
-    OLED_Puts((char *)title_buffer);
-    
-    // Muestra el contenido de album_buffer en la tercera línea
-    OLED_gotoxy(0, 2);
-    OLED_Puts((char *)album_buffer);
-    
-    OLED_gotoxy(0, 3);
-    OLED_Puts((char *)year_buffer);
     // Reinicia los buffers y el índice
     artist_buffer[0] = '\0';
     title_buffer[0] = '\0';
@@ -92,10 +95,6 @@ void OLED_print(void){
     year_buffer[0] = '\0';
     usart_buffer_index = 0;
     current_buffer_index = 0;
-    _delay_ms(400);
-    }
-    OLED_gotoxy(0, 0);
-
 }
 
 ISR(USART_RXC_vect){
@@ -163,7 +162,7 @@ void boot(void){ //funcion de inicio
   OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
   OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
   OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-  OLED_gotoxy(0,3); OLED_Puts("OCT-22-2023 11:05 AM");
+  OLED_gotoxy(0,3); OLED_Puts("OCT-23-2023 11:05 AM");
   _delay_ms(5000);
   OLED_gotoxy(0,0);
   OLED_clrscr();
