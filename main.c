@@ -62,9 +62,8 @@ void usart_transmit(unsigned char data){
 
 void scrollBuffer(char *buffer, int bufferSize, int j) {
     if (strlen(buffer) <= bufferSize) {
-        //return;  // No hay necesidad de desplazar si el buffer es igual o menor al tamaño deseado
-            OLED_gotoxy(0, j);
-            OLED_Puts(buffer);
+        OLED_gotoxy(0, j);
+        OLED_Puts(buffer);
 
     }
     else {
@@ -99,6 +98,7 @@ void OLED_print(void) {
     year_buffer[0] = '\0';
     usart_buffer_index = 0;
     current_buffer_index = 0;
+    OLED_gotoxy(0,0);
 }
 
 ISR(USART_RXC_vect){
@@ -157,37 +157,36 @@ void set_volume(uint32_t adcValue){
 }
 
 void boot(void){ //funcion de inicio
-  DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1) | (1 << PB0); //configurar pb0,pb1,pb5 como salidas
-  DDRC = 0xFF; // Inicializar puerto C como salida USART
-  OLED_Init(); // Inicializar OLED
-  adc_init(); // Inicializar el ADC
-  usart_init(); // Inicializar USART
-  OLED_clrscr();
-  OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
-  OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
-  OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-  OLED_gotoxy(0,3); OLED_Puts("OCT-23-2023 11:05 AM");
-  _delay_ms(5000);
-  OLED_gotoxy(0,0);
-  OLED_clrscr();
-  timer_init();
-  sei();
-  PORTB |= (1 << PB0);
+    DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1) | (1 << PB0); //configurar pb0,pb1,pb5 como salidas
+    DDRC = 0xFF; // Inicializar puerto C como salida USART
+    OLED_Init(); // Inicializar OLED
+    adc_init(); // Inicializar el ADC
+    usart_init(); // Inicializar USART
+    OLED_clrscr();
+    OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
+    OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
+    OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
+    OLED_gotoxy(0,3); OLED_Puts("OCT-23-2023 11:05 AM");
+    _delay_ms(5000);
+    OLED_gotoxy(0,0);
+    OLED_clrscr();
+    timer_init();
+    sei();
+    PORTB |= (1 << PB0);
 }
 
 int main(void){
-  boot();
-  uint16_t prevAdcValue = 255; //valor especifico para que no mande "ruido"
-  while (1){
-    uint16_t adcValue = adc_read();
+    boot();
+    uint16_t prevAdcValue = 255; //valor especifico para que no mande "ruido"
+    while (1){
+        uint16_t adcValue = adc_read();
     
-    if (adcValue + HISTERESIS <= prevAdcValue || adcValue - HISTERESIS >= prevAdcValue ){  //transmite unicamente cuando cambia de valor el ADC
-      set_volume(adcValue);
-      usart_transmit('\n');
-    //  prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
+        if (adcValue + HISTERESIS <= prevAdcValue || adcValue - HISTERESIS >= prevAdcValue ){  //transmite unicamente cuando cambia de valor el ADC
+            set_volume(adcValue);
+            usart_transmit('\n');
+            //  prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
+        }
+        prevAdcValue = adcValue +2 ; //mantiene el valor de ADC para no enviar ruido
+        _delay_ms(100);
     }
-    prevAdcValue = adcValue +2 ; //mantiene el valor de ADC para no enviar ruido
-    
-    _delay_ms(100);
-  }
 }
