@@ -7,7 +7,7 @@
 
 #define BAUD 9600
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
-#define USART_BUFFER_SIZE 50
+#define USART_BUFFER_SIZE 100
 #define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
 #define HISTERESIS 1 // Número que se maneja para eliminar el error en la entrada del ADC 
 char artist_buffer[USART_BUFFER_SIZE];
@@ -60,22 +60,24 @@ void usart_transmit(unsigned char data){
     UDR = data; // Enviar el dato
 }
 
-// Función para desplazar un buffer hacia la derecha en un ciclo infinito
-void scrollBuffer(char *buffer, int bufferSize) {
+void scrollBuffer(char *buffer, int bufferSize, int j) {
     if (strlen(buffer) <= bufferSize) {
-        return;  // No hay necesidad de desplazar si el buffer es igual o menor al tamaño deseado
-    }
+        //return;  // No hay necesidad de desplazar si el buffer es igual o menor al tamaño deseado
+            OLED_gotoxy(0, j);
+            OLED_Puts(buffer);
 
-    int len = strlen(buffer);
-    char temp[21];  // Buffer temporal para el desplazamiento
-    for (int i = 0; i <= len; i++) {
-        strncpy(temp, buffer + i, bufferSize);  // Copia el siguiente segmento de 20 caracteres
-        temp[bufferSize] = '\0';  // Asegura que sea una cadena válida de C
-        OLED_gotoxy(0, 0);
-        OLED_Puts(temp);
-        _delay_ms(400);  // Pausa antes de desplazar
     }
-    
+    else {
+        int len = strlen(buffer);
+        char temp[21];  // Buffer temporal para el desplazamiento
+        for (int i = 0; i <= len - bufferSize ; i++){
+            strncpy(temp, buffer + i, bufferSize);  // Copia el siguiente segmento de 20 caracteres
+            temp[bufferSize] = '\0';  // Asegura que sea una cadena válida de C
+            OLED_gotoxy(0, j);
+            OLED_Puts(temp);
+            _delay_ms(300);  // Pausa antes de desplazar
+        }
+    }
 }
 
 void OLED_print(void) {
@@ -83,10 +85,12 @@ void OLED_print(void) {
     OLED_clrscr();
     
     // Desplazar los buffers si su longitud es mayor a 20 caracteres
-    scrollBuffer(artist_buffer, 20);
-    scrollBuffer(title_buffer, 20);
-    scrollBuffer(album_buffer, 20);
-    scrollBuffer(year_buffer, 20);
+    int artist_len = strlen(artist_buffer);
+    
+    scrollBuffer(artist_buffer, 20, 0);
+    scrollBuffer(title_buffer, 20, 1);
+    scrollBuffer(album_buffer, 20, 2);
+    scrollBuffer(year_buffer, 20, 3);
 
     // Reinicia los buffers y el índice
     artist_buffer[0] = '\0';
