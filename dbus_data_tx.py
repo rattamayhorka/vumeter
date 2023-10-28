@@ -26,17 +26,14 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
                     # Encontramos una línea con "xesam:artist", avanzamos dos veces para llegar a la línea con el valor
                     next_line = next(process.stdout)  # Avanzar una línea
                     next_line = next(process.stdout)  # Avanzar una línea nuevamente
-#                    youtube_artist = next_line.strip().replace('string "', '')  # Eliminar "string " y las comillas dobles
                     youtube_artist = next_line.strip().replace('variant             array [', '').strip('string "')  # Eliminar comillas dobles
-                    youtube_artist = next_line.strip().replace('variant             array [', '').strip('string "')  # Eliminar comillas dobles
- #                   youtube_artist = next_line.strip().replace('variant             array [', '').strip()
                     break  # Detenemos el bucle después de encontrar el valor
 
             # Cerrar el proceso
             process.terminate()
 
             if youtube_title != prev_youtube_title:
-                output = f"\aNow playing:\n{youtube_artist}\n{youtube_title}\n\n"  # Concatena la información
+                output = f"\x02\aNow playing:\n{youtube_artist}\n{youtube_title}\n\n"  # Concatena la información
             
                 unicd_output = unidecode(output)                
                 #print(unicd_output)  # Imprime la salida
