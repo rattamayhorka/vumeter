@@ -26,23 +26,26 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
                     # Encontramos una línea con "xesam:artist", avanzamos dos veces para llegar a la línea con el valor
                     next_line = next(process.stdout)  # Avanzar una línea
                     next_line = next(process.stdout)  # Avanzar una línea nuevamente
-                    youtube_artist = next_line.strip().replace('variant             array [', '').strip('string "')  # Eliminar comillas dobles
+                    
+
+                    #youtube_artist = next_line.strip().replace('variant             array [', '')[:-1]  # Eliminar comillas dobles
+                    youtube_artist = next_line.strip().replace('variant             array [', '')[8:-1]  # Eliminar comillas dobles y los primeros 7 caracteres
                     break  # Detenemos el bucle después de encontrar el valor
 
             # Cerrar el proceso
             process.terminate()
 
-            if youtube_title != prev_youtube_title:
-                output = f"\x02\aNow playing:\n{youtube_artist}\n{youtube_title}\n\n"  # Concatena la información
-            
-                unicd_output = unidecode(output)                
-                #print(unicd_output)  # Imprime la salida
-                print(output)  # Imprime la salida
-                for char in unicd_output:
-                #for char in output:
-                    ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
-                    time.sleep(0.015)  # Espera 15 ms entre cada carácter  
-                prev_youtube_title = youtube_title
+            #if youtube_title != prev_youtube_title:
+            output = f"\aNow playing:\n{youtube_artist} \n{youtube_title}\n\n"  # Concatena la información
+        
+            unicd_output = unidecode(output)                
+            #print(unicd_output)  # Imprime la salida
+            print(output)  # Imprime la salida
+            for char in unicd_output:
+            #for char in output:
+                ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
+                time.sleep(0.015)  # Espera 15 ms entre cada carácter  
+            prev_youtube_title = youtube_title
         except subprocess.CalledProcessError as e: # Maneja excepciones generadas por el comando cmus-remote
             print(f"Error ejecutando comando: {e}")
             # agregar un manejo de errores como si no se está ejecutando.

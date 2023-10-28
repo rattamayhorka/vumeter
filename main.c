@@ -19,7 +19,7 @@ volatile uint8_t usart_buffer_index = 0;
 
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 int current_buffer_index = 0;
-
+int j = 0;
 volatile uint8_t timer_counter = 0;
 const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
 
@@ -59,7 +59,6 @@ void usart_transmit(unsigned char data){
 
 void scrollBuffer(char *buffer, int bufferSize, int j){
     OLED_gotoxy(0,0);
-
     if (strlen(buffer) <= bufferSize){
         OLED_gotoxy(0, j);
         OLED_Puts(buffer);
@@ -81,9 +80,8 @@ void scrollBuffer(char *buffer, int bufferSize, int j){
 void OLED_print(void){
     // Borra la pantalla LCD
     OLED_clrscr();
-    
+    OLED_gotoxy(0,0);
     // Desplazar los buffers si su longitud es mayor a 20 caracteres
-    int artist_len = strlen(artist_buffer);
     
     scrollBuffer(artist_buffer, 20, 0);
     scrollBuffer(title_buffer, 20, 1);
@@ -100,24 +98,28 @@ void OLED_print(void){
     OLED_gotoxy(0,0);
 }
 
-ISR(USART_RXC_vect){
+ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
 
     if (received_data == '\a'){
-        // Borrar la pantalla LCD cuando se recibe '\a'
-        OLED_clrscr();
-        usart_buffer_index = 0;
-    } else if (received_data == '\n'){
+        // Borrar la pantalla LCD y reiniciar todos los buffers
+        for (int i = 0; i < NUM_BUFFERS; i++){
+            buffers[i][0] = '\0'; // Reiniciar el buffer
+        }
+        usart_buffer_index = 0; // Reiniciar el índice del buffer actual
+        current_buffer_index = 0; // Reiniciar el índice del buffer actual
+        timer_counter = 0; // Reiniciar el contador de tiempo
+    } else if (received_data == '\n') {
         // Cambiar al siguiente buffer cuando se recibe '\n'
         current_buffer_index++;
 
         // Si current_buffer_index es igual al número de buffers, significa que se han completado todos
         if (current_buffer_index == NUM_BUFFERS){
             OLED_print();
-        } else{
+        } else {
             usart_buffer_index = 0; // Reiniciar el índice del buffer actual
         }
-    } else{
+    } else {
         // Almacenar el carácter en el buffer actual
         char *current_buffer = buffers[current_buffer_index];
 
@@ -138,7 +140,7 @@ ISR(USART_RXC_vect){
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
     timer_counter++;
-    PORTB ^= (1<<PB0);
+    PORTB ^= (1<<PB0);    
 }
 
 //funcion de manejo de volumen
