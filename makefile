@@ -105,7 +105,7 @@ AVRDUDE_PROGRAMMER = arduino
 #AVRDUDE_PORT = com1	   # programmer connected to serial device
 #AVRDUDE_PORT = /dev/cu.KeySerial1	   # programmer connected to serial device
 #AVRDUDE_PORT = /dev/ttyACM0 		   #for original arduino uno 
-AVRDUDE_PORT = /dev/ttyUSB*
+AVRDUDE_PORT = /dev/ttyUSB1
 #AVRDUDE_PORT = lpt1	# programmer connected to parallel port
 
 #BAUDRATE = 9600

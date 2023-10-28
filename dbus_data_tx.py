@@ -14,22 +14,33 @@ def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de e
 
             # Inicializar una variable para almacenar el valor de xesam:title
             youtube_title = None
+            youtube_artist = None
 
             for line in process.stdout:
                 if "xesam:title" in line:
                     # Encontramos una línea con "xesam:title", la siguiente línea contiene el valor que queremos
                     next_line = next(process.stdout)
                     youtube_title = next_line.strip().replace('variant                      string "', '')[:-1]
-                    break
+                    #break
+                elif "xesam:artist" in line:
+                    # Encontramos una línea con "xesam:artist", avanzamos dos veces para llegar a la línea con el valor
+                    next_line = next(process.stdout)  # Avanzar una línea
+                    next_line = next(process.stdout)  # Avanzar una línea nuevamente
+#                    youtube_artist = next_line.strip().replace('string "', '')  # Eliminar "string " y las comillas dobles
+                    youtube_artist = next_line.strip().replace('variant             array [', '').strip('string "')  # Eliminar comillas dobles
+                    youtube_artist = next_line.strip().replace('variant             array [', '').strip('string "')  # Eliminar comillas dobles
+ #                   youtube_artist = next_line.strip().replace('variant             array [', '').strip()
+                    break  # Detenemos el bucle después de encontrar el valor
+
             # Cerrar el proceso
             process.terminate()
 
             if youtube_title != prev_youtube_title:
-                output = f"\aNow playing:\n{youtube_title}\n\n\n"  # Concatena la información
+                output = f"\aNow playing:\n{youtube_artist}\n{youtube_title}\n\n"  # Concatena la información
             
                 unicd_output = unidecode(output)                
                 #print(unicd_output)  # Imprime la salida
-                print(youtube_title)  # Imprime la salida
+                print(output)  # Imprime la salida
                 for char in unicd_output:
                 #for char in output:
                     ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial

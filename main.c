@@ -39,12 +39,9 @@ void adc_init(void){
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1); // Habilitar ADC y configurar el prescaler
 }
 
-void timer_init(void) {
-    // Configura el prescaler a 64
+void timer_init(void){
     TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
-
     TCNT1 = 65472; // (65536 - 64) para 1 Hz
-
     TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
 
@@ -60,11 +57,12 @@ void usart_transmit(unsigned char data){
     UDR = data; // Enviar el dato
 }
 
-void scrollBuffer(char *buffer, int bufferSize, int j) {
-    if (strlen(buffer) <= bufferSize) {
+void scrollBuffer(char *buffer, int bufferSize, int j){
+    OLED_gotoxy(0,0);
+
+    if (strlen(buffer) <= bufferSize){
         OLED_gotoxy(0, j);
         OLED_Puts(buffer);
-
     }
     else {
         int len = strlen(buffer);
@@ -77,9 +75,10 @@ void scrollBuffer(char *buffer, int bufferSize, int j) {
             _delay_ms(300);  // Pausa antes de desplazar
         }
     }
+
 }
 
-void OLED_print(void) {
+void OLED_print(void){
     // Borra la pantalla LCD
     OLED_clrscr();
     
@@ -165,8 +164,8 @@ void boot(void){ //funcion de inicio
     OLED_clrscr();
     OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
     OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
-    OLED_gotoxy(0,2); OLED_Puts("rattamayhorka");
-    OLED_gotoxy(0,3); OLED_Puts("OCT-23-2023 11:05 AM");
+    OLED_gotoxy(0,2); OLED_Puts("@rattamayhorka");
+    OLED_gotoxy(0,3); OLED_Puts("OCT-27-2023 22:00 PM");
     _delay_ms(5000);
     OLED_gotoxy(0,0);
     OLED_clrscr();
