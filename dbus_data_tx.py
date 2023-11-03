@@ -1,67 +1,74 @@
 import serial
 import subprocess
+import pydbus
 import time
-import threading
 from unidecode import unidecode
+import threading
 
-def enviar_activo(): # Función para enviar datos sin afectar con el tiempo de espera de la transmision
-    prev_youtube_title = ""
+ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
+
+def obtener_reproductores_activos():
+    # Ejecuta el comando y captura la salida para obtener una lista de reproductores activos
+    command = "busctl --user --list | grep org.mpris.MediaPlayer2"
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    # Verifica si hubo errores
+    if stderr:
+        print(f"Error: {stderr.decode('utf-8')}")
+
+    # Guarda la salida en la variable players
+    players = stdout.decode('utf-8')
+
+    # Divide la cadena en líneas
+    player_lines = players.split('\n')
+    return player_lines
+
+def enviar_data():
     while True:
         try:
-            # Ejecutar el comando dbus-monitor
-            command = "dbus-monitor --session 'type=signal,interface=org.freedesktop.DBus.Properties'"
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            player_lines = obtener_reproductores_activos()
+            if not player_lines:
+                print("No hay reproductores activos. Esperando...")
+                time.sleep(3)  # Espera 10 segundos antes de volver a verificar
+                continue
 
-            # Inicializar una variable para almacenar el valor de xesam:title
-            youtube_title = None
-            youtube_artist = None
+            # Itera a través de las líneas y muestra la primera parte de cada línea antes del primer espacio en blanco
+            for line in player_lines:
+                parts = line.split()
+                if parts:
+                    service_name = parts[0]  # Nombre del servicio del reproductor
+                    print(f'Reproductor: {service_name}')
 
-            for line in process.stdout:
-                if "xesam:title" in line:
-                    # Encontramos una línea con "xesam:title", la siguiente línea contiene el valor que queremos
-                    next_line = next(process.stdout)
-                    youtube_title = next_line.strip().replace('variant                      string "', '')[:-1]
-                    #break
-                elif "xesam:artist" in line:
-                    # Encontramos una línea con "xesam:artist", avanzamos dos veces para llegar a la línea con el valor
-                    next_line = next(process.stdout)  # Avanzar una línea
-                    next_line = next(process.stdout)  # Avanzar una línea nuevamente
-                    
+                    # Conéctate al servicio D-Bus de un reproductor multimedia específico
+                    session_bus = pydbus.SessionBus()
+                    player = session_bus.get(service_name, '/org/mpris/MediaPlayer2')
 
-                    #youtube_artist = next_line.strip().replace('variant             array [', '')[:-1]  # Eliminar comillas dobles
-                    youtube_artist = next_line.strip().replace('variant             array [', '')[8:-1]  # Eliminar comillas dobles y los primeros 7 caracteres
-                    break  # Detenemos el bucle después de encontrar el valor
+                    # Obtiene los datos de metadatos del reproductor
+                    metadata = player.Metadata
+                    if 'xesam:artist' in metadata and 'xesam:title' in metadata:
+                        artist = metadata["xesam:artist"][0]
+                        title = metadata["xesam:title"]
 
-            # Cerrar el proceso
-            process.terminate()
-
-            #if youtube_title != prev_youtube_title:
-            output = f"\aNow playing:\n{youtube_artist} \n{youtube_title}\n\n"  # Concatena la información
-        
+            output = f"\aNow playing:\n{artist} \n{title}\n\n"
             unicd_output = unidecode(output)                
             #print(unicd_output)  # Imprime la salida
             print(output)  # Imprime la salida
             for char in unicd_output:
-            #for char in output:
+                #for char in output:
                 ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
-                time.sleep(0.015)  # Espera 15 ms entre cada carácter  
-            prev_youtube_title = youtube_title
-        except subprocess.CalledProcessError as e: # Maneja excepciones generadas por el comando cmus-remote
-            print(f"Error ejecutando comando: {e}")
-            # agregar un manejo de errores como si no se está ejecutando.
+                time.sleep(0.015)  # Espera 15 ms entre cada carácter              
 
         except Exception as e:
             # Maneja otras excepciones
-            print(f"Error inesperado: {e}")
+            print(f"Error: {e}")
 
-        time.sleep(1) #espera un segundo para verificar si cambió la canción
-
-ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
+        time.sleep(1)
 
 # llamada de funcion / tipo interrupcion
-activo_thread = threading.Thread(target=enviar_activo)
-activo_thread.daemon = True  # El hilo se detendrá cuando el programa principal termine
-activo_thread.start()
+data_thread = threading.Thread(target=enviar_data)
+data_thread.daemon = True  # El hilo se detendrá cuando el programa principal termine
+data_thread.start()
 
 try:
     char_buffer = ""  # Buffer para acumular caracteres

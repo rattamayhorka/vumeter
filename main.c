@@ -167,7 +167,7 @@ void boot(void){ //funcion de inicio
     OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
     OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
     OLED_gotoxy(0,2); OLED_Puts("@rattamayhorka");
-    OLED_gotoxy(0,3); OLED_Puts("OCT-27-2023 22:00 PM");
+    OLED_gotoxy(0,3); OLED_Puts("NOV-02-2023 22:00 PM");
     _delay_ms(5000);
     OLED_gotoxy(0,0);
     OLED_clrscr();
