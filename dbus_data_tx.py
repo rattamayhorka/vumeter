@@ -25,6 +25,8 @@ def obtener_reproductores_activos():
     return player_lines
 
 def enviar_data():
+    artist = ""
+    title = ""
     while True:
         try:
             player_lines = obtener_reproductores_activos()
@@ -50,18 +52,26 @@ def enviar_data():
                         artist = metadata["xesam:artist"][0]
                         title = metadata["xesam:title"]
 
-            output = f"\aNow playing:\n{artist} \n{title}\n\n"
+
+            if not artist:
+                output = f"\aesperando...\n\n\n\n"
+            else:
+                output = f"\aNow playing:\n{artist} \n{title}\n\n"
+    
             unicd_output = unidecode(output)                
-            #print(unicd_output)  # Imprime la salida
+            
             print(output)  # Imprime la salida
             for char in unicd_output:
-                #for char in output:
+            
                 ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
                 time.sleep(0.015)  # Espera 15 ms entre cada carácter              
 
+
+
+
+
         except Exception as e:
-            # Maneja otras excepciones
-            print(f"Error: {e}")
+            print(f"Error: {e}") # Maneja otras excepciones
 
         time.sleep(1)
 
