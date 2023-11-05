@@ -45,7 +45,9 @@ def recopilar_data():
                     service_name = parts[0]  # Nombre del servicio del reproductor
                     #print(f'Reproductor: {service_name}')
                     reproductor = service_name
-                    
+                    reproductor = reproductor.replace("org.mpris.MediaPlayer2.", "")
+
+                    reproductor = reproductor.split('.')[0]
                     # Conéctate al servicio D-Bus de un reproductor multimedia específico
                     session_bus = pydbus.SessionBus()
                     player = session_bus.get(service_name, '/org/mpris/MediaPlayer2')
