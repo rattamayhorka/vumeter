@@ -52,7 +52,7 @@ def enviar_data():
                     if 'xesam:artist' in metadata and 'xesam:title' in metadata:
                         artist = metadata["xesam:artist"][0]
                         title = metadata["xesam:title"]            
-            if artist and service_name:
+            if title and service_name:
                 output = f"\aNow playing:\n{artist} \n{title}\n\n"
                 artist = ""
                 title = ""
