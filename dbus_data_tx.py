@@ -29,6 +29,7 @@ def recopilar_data():
     title = ""
     service_name = ""
     prev_output = ""
+    reproductor = ""
     while True:
         try:
             player_lines = obtener_reproductores_activos()
@@ -42,8 +43,9 @@ def recopilar_data():
                 parts = line.split()
                 if parts:
                     service_name = parts[0]  # Nombre del servicio del reproductor
-                    print(f'Reproductor: {service_name}')
-
+                    #print(f'Reproductor: {service_name}')
+                    reproductor = service_name
+                    
                     # Conéctate al servicio D-Bus de un reproductor multimedia específico
                     session_bus = pydbus.SessionBus()
                     player = session_bus.get(service_name, '/org/mpris/MediaPlayer2')
@@ -55,9 +57,10 @@ def recopilar_data():
                         title = metadata["xesam:title"]
 
             if title and service_name:
-                output = f"\aNow playing:\n{artist} \n{title}\n\n"
+                output = f"\aNow playing:\n{artist} \n{title}\n{reproductor}\n"
                 artist = ""
                 title = ""
+                reproductor = ""
             
             else:
                 output = f"\awaiting...\n \n \n\n"
