@@ -8,8 +8,8 @@
 #define BAUD 9600
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
 #define USART_BUFFER_SIZE 100
-#define NUM_BUFFERS 4 // Número de buffers (artist, title, album)
-#define HISTERESIS 1 // Número que se maneja para eliminar el error en la entrada del ADC 
+#define NUM_BUFFERS 4 //Número de buffers (artist, title, album)
+#define HISTERESIS 1 //Número que se maneja para eliminar el error en la entrada del ADC 
 char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
@@ -58,10 +58,14 @@ void usart_transmit(unsigned char data){
 }
 
 void scrollBuffer(char *buffer, int bufferSize, int j){
+    char first_buffer[20];
+    strncpy(first_buffer, buffer, 20);  // Copia los primeros 20 caracteres de buffer a first_buffer
+    //first_buffer[20] = '\0';  // Asegura que first_buffer sea una cadena válida de C
     OLED_gotoxy(0,0);
     if (strlen(buffer) <= bufferSize){
         OLED_gotoxy(0, j);
         OLED_Puts(buffer);
+
     }
     else {
         int len = strlen(buffer);
@@ -74,7 +78,8 @@ void scrollBuffer(char *buffer, int bufferSize, int j){
             _delay_ms(300);  // Pausa antes de desplazar
         }
     }
-
+    OLED_gotoxy(0,j);
+    OLED_Puts(first_buffer); 
 }
 
 void OLED_print(void){
@@ -178,14 +183,17 @@ void boot(void){ //funcion de inicio
 
 int main(void){
     boot();
+    OLED_gotoxy(0,0); OLED_Puts("Esperando");
+    OLED_gotoxy(0,1); OLED_Puts("conexion a PC...");
+
     uint16_t prevAdcValue = 255; //valor especifico para que no mande "ruido"
+
     while (1){
         uint16_t adcValue = adc_read();
     
-        if (adcValue + HISTERESIS <= prevAdcValue || adcValue - HISTERESIS >= prevAdcValue ){  //transmite unicamente cuando cambia de valor el ADC
+        if (adcValue + HISTERESIS <= prevAdcValue || adcValue - HISTERESIS >= prevAdcValue ){
             set_volume(adcValue);
             usart_transmit('\n');
-            //  prevAdcValue = adcValue; //mantiene el valor de ADC para no enviar ruido
         }
         prevAdcValue = adcValue +2 ; //mantiene el valor de ADC para no enviar ruido
         _delay_ms(100);

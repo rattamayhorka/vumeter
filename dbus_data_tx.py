@@ -24,6 +24,15 @@ def obtener_reproductores_activos():
     player_lines = players.split('\n')
     return player_lines
 
+
+
+def send_serial(dato_envio):
+    unicd_output = unidecode(dato_envio)                
+    print(dato_envio)  # Imprime la salida
+    for char in unicd_output:
+        ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
+        time.sleep(0.002)  # Espera 2 ms entre cada carácter              
+
 def recopilar_data():
     artist = ""
     title = ""
@@ -46,8 +55,8 @@ def recopilar_data():
                     #print(f'Reproductor: {service_name}')
                     reproductor = service_name
                     reproductor = reproductor.replace("org.mpris.MediaPlayer2.", "")
-
                     reproductor = reproductor.split('.')[0]
+
                     # Conéctate al servicio D-Bus de un reproductor multimedia específico
                     session_bus = pydbus.SessionBus()
                     player = session_bus.get(service_name, '/org/mpris/MediaPlayer2')
@@ -59,22 +68,16 @@ def recopilar_data():
                         title = metadata["xesam:title"]
 
             if title and service_name:
-                output = f"\aNow playing:\n{artist} \n{title}\n{reproductor}\n"
+                output = f"\a{reproductor}...:\n{artist} \n{title}\n\n"
                 artist = ""
                 title = ""
                 reproductor = ""
             
             else:
-                output = f"\awaiting...\n \n \n\n"
-
-                  
+                output = f"\aEsperando\ndatos...\n \n\n"
+            
             if output != prev_output:  # Verifica si la salida cambió
-                unicd_output = unidecode(output)                
-                print(output)  # Imprime la salida
-                for char in unicd_output:
-                
-                    ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
-                    time.sleep(0.015)  # Espera 15 ms entre cada carácter              
+                send_serial(output)              
                 prev_output = output  # Actualiza la salida anterior
 
         except Exception as e:
