@@ -58,14 +58,13 @@ void usart_transmit(unsigned char data){
 }
 
 void scrollBuffer(char *buffer, int bufferSize, int j){
-    char first_buffer[20];
+    char first_buffer[21];
     strncpy(first_buffer, buffer, 20);  // Copia los primeros 20 caracteres de buffer a first_buffer
-    //first_buffer[20] = '\0';  // Asegura que first_buffer sea una cadena válida de C
+    first_buffer[20] = '\0';  // Asegura que first_buffer sea una cadena válida de C
     OLED_gotoxy(0,0);
     if (strlen(buffer) <= bufferSize){
         OLED_gotoxy(0, j);
         OLED_Puts(buffer);
-
     }
     else {
         int len = strlen(buffer);

@@ -24,8 +24,6 @@ def obtener_reproductores_activos():
     player_lines = players.split('\n')
     return player_lines
 
-
-
 def send_serial(dato_envio):
     unicd_output = unidecode(dato_envio)                
     print(dato_envio)  # Imprime la salida
@@ -56,6 +54,7 @@ def recopilar_data():
                     reproductor = service_name
                     reproductor = reproductor.replace("org.mpris.MediaPlayer2.", "")
                     reproductor = reproductor.split('.')[0]
+                    reproductor = reproductor[0].capitalize() + reproductor[1:]
 
                     # Conéctate al servicio D-Bus de un reproductor multimedia específico
                     session_bus = pydbus.SessionBus()
@@ -67,14 +66,20 @@ def recopilar_data():
                         artist = metadata["xesam:artist"][0]
                         title = metadata["xesam:title"]
 
+                        if ' - ' in title: # Verifica si el título contiene " - " y divide en artist y title
+                            artist, title = title.split(' - ', 1)
+                            artist = artist.strip()
+                            title = title.strip()
+                               
+
             if title and service_name:
-                output = f"\a{reproductor}...:\n{artist} \n{title}\n\n"
+                output = f"\a{reproductor}...:\n{artist}\n{title}\n\n"
                 artist = ""
                 title = ""
                 reproductor = ""
             
             else:
-                output = f"\aEsperando\ndatos...\n \n\n"
+                output = f"\aEsperando\ndatos...\n\n\n"
             
             if output != prev_output:  # Verifica si la salida cambió
                 send_serial(output)              
