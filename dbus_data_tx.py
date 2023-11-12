@@ -25,7 +25,7 @@ def obtener_reproductores_activos():
     return player_lines
 
 def send_serial(dato_envio):
-    unicd_output = unidecode(dato_envio)                
+    unicd_output = unidecode(dato_envio)
     print(dato_envio)  # Imprime la salida
     for char in unicd_output:
         ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
@@ -70,7 +70,8 @@ def recopilar_data():
                             artist, title = title.split(' - ', 1)
                             artist = artist.strip()
                             title = title.strip()
-                               
+                        if ' - Topic' in artist: # Verifica si el título contiene " - " y divide en artist y title
+                            artist = artist.replace(' - Topic',"")
 
             if title and service_name:
                 output = f"\a{reproductor}...:\n{artist}\n{title}\n\n"

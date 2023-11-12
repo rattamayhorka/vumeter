@@ -57,19 +57,32 @@ void usart_transmit(unsigned char data){
     UDR = data; // Enviar el dato
 }
 
-void scrollBuffer(char *buffer, int bufferSize, int j){
+void scrollBuffer(char *buffer, int bufferSize, int j) {
     char first_buffer[21];
     strncpy(first_buffer, buffer, 20);  // Copia los primeros 20 caracteres de buffer a first_buffer
     first_buffer[20] = '\0';  // Asegura que first_buffer sea una cadena válida de C
-    OLED_gotoxy(0,0);
-    if (strlen(buffer) <= bufferSize){
+    OLED_gotoxy(0, 0);
+
+    // Itera sobre la cadena y reemplaza los caracteres específicos
+    for (int i = 0; buffer[i] != '\0'; i++) {
+        if (buffer[i] == '{') {
+            buffer[i] = 0xFD;
+        } else if (buffer[i] == '}') {
+            buffer[i] = 0xFF;
+        } else if (buffer[i] == '[') {
+            buffer[i] = 0xFA;
+        } else if (buffer[i] == ']') {
+            buffer[i] = 0xFC;
+        }
+    }
+
+    if (strlen(buffer) <= bufferSize) {
         OLED_gotoxy(0, j);
         OLED_Puts(buffer);
-    }
-    else {
+    } else {
         int len = strlen(buffer);
         char temp[21];  // Buffer temporal para el desplazamiento
-        for (int i = 0; i <= len - bufferSize ; i++){
+        for (int i = 0; i <= len - bufferSize; i++) {
             strncpy(temp, buffer + i, bufferSize);  // Copia el siguiente segmento de 20 caracteres
             temp[bufferSize] = '\0';  // Asegura que sea una cadena válida de C
             OLED_gotoxy(0, j);
@@ -77,8 +90,9 @@ void scrollBuffer(char *buffer, int bufferSize, int j){
             _delay_ms(300);  // Pausa antes de desplazar
         }
     }
-    OLED_gotoxy(0,j);
-    OLED_Puts(first_buffer); 
+
+    OLED_gotoxy(0, j);
+    OLED_Puts(first_buffer);
 }
 
 void OLED_print(void){
@@ -167,11 +181,14 @@ void boot(void){ //funcion de inicio
     OLED_Init(); // Inicializar OLED
     adc_init(); // Inicializar el ADC
     usart_init(); // Inicializar USART
-    OLED_clrscr();
+    //OLED_clrscr();
+    
+    OLED_Data(0b11111010);
     OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
     OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
     OLED_gotoxy(0,2); OLED_Puts("@rattamayhorka");
     OLED_gotoxy(0,3); OLED_Puts("NOV-02-2023 22:00 PM");
+
     _delay_ms(5000);
     OLED_gotoxy(0,0);
     OLED_clrscr();
