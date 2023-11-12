@@ -7,7 +7,7 @@ Vumeter, es un proyecto con el que puedes mostrar en un OLED, información en ti
 
 Este script de Python interactúa con reproductores multimedia a traves de D-Bus y formatea la información y la envía al atmega32 que controla la pantalla OLED.
 
-##Por implementar:
+## Por implementar:
 - vumetro (30%)
 - notificaciónes (0%)
 
