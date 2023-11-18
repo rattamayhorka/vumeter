@@ -70,6 +70,7 @@ def recopilar_data():
                             artist, title = title.split(' - ', 1)
                             artist = artist.strip()
                             title = title.strip()
+
                         if ' - Topic' in artist: # Verifica si el título contiene " - " y divide en artist y title
                             artist = artist.replace(' - Topic',"")
 

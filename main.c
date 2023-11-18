@@ -25,6 +25,10 @@ const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundo
 
 uint32_t prevVolume = 0;
 
+
+const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
+const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
+
 void usart_init(void){
     UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
     UBRRL = BAUDRATE;
@@ -174,26 +178,123 @@ void set_volume(uint32_t adcValue){
         prevVolume = volume;
     }
 }
+void boot_splash(void){
+    OLED_gotoxy(0,0); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x1F);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,1); 
+    for(int i = 0; i < 6; ++i){
+        OLED_Data(0x1F);
+        _delay_ms(50);    
+    }
+    for (int i = 0; i < 10; ++i){
+        OLED_Data(buffer_saludo[i]);
+        _delay_ms(50);
+    }
+    for(int i = 0; i < 6; ++i){
+        OLED_Data(0x1F);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,2);
+    for(int i = 0; i < 4; ++i){
+        OLED_Data(0x1F);
+        _delay_ms(50);    
+    }
+
+    for (int i = 0; i < 14; ++i){
+        OLED_Data(buffer_nombre[i]);
+        _delay_ms(50);
+    }
+
+    for(int i = 0; i < 4; ++i){
+        OLED_Data(0x1F);
+        _delay_ms(50);    
+    }
+
+    OLED_gotoxy(0,3); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x1F);
+        _delay_ms(50);    
+    }
+//REINICIO DE SECUENCIA
+    OLED_gotoxy(0,0); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,1); 
+    for(int i = 0; i < 6; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+
+    for (int i = 0; i < 10; ++i){
+        OLED_Data(buffer_saludo[i]);
+        _delay_ms(50);
+    }
+
+    for(int i = 0; i < 6; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,2);
+    for(int i = 0; i < 4; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+
+    for (int i = 0; i < 14; ++i){
+        OLED_Data(buffer_nombre[i]);
+        _delay_ms(50);
+    }
+
+    for(int i = 0; i < 4; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+
+    OLED_gotoxy(0,3); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+
+
+    OLED_gotoxy(0,0); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+
+    OLED_gotoxy(0,1); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,2); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,3); 
+    for(int i = 0; i < 20; ++i){
+        OLED_Data(0x20);
+        _delay_ms(50);    
+    }
+    OLED_gotoxy(0,0);
+}    
 
 void boot(void){ //funcion de inicio
     DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1) | (1 << PB0); //configurar pb0,pb1,pb5 como salidas
     DDRC = 0xFF; // Inicializar puerto C como salida USART
     OLED_Init(); // Inicializar OLED
     adc_init(); // Inicializar el ADC
-    usart_init(); // Inicializar USART
-    //OLED_clrscr();
-    
-    OLED_Data(0b11111010);
-    OLED_gotoxy(0,0); OLED_Puts("Bienvenido...");
-    OLED_gotoxy(0,1); OLED_Puts("'vumeter' creado por:");
-    OLED_gotoxy(0,2); OLED_Puts("@rattamayhorka");
-    OLED_gotoxy(0,3); OLED_Puts("NOV-02-2023 22:00 PM");
-
-    _delay_ms(5000);
-    OLED_gotoxy(0,0);
-    OLED_clrscr();
+    usart_init(); // Inicializar USART    
     timer_init();
     sei();
+    boot_splash();
     PORTB |= (1 << PB0);
 }
 
