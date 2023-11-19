@@ -10,6 +10,10 @@
 #define USART_BUFFER_SIZE 100
 #define NUM_BUFFERS 4 //Número de buffers (artist, title, album)
 #define HISTERESIS 1 //Número que se maneja para eliminar el error en la entrada del ADC 
+
+#define LED_PORT PORTD 
+#define LED_PIN PD6
+
 char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
@@ -162,7 +166,7 @@ ISR(USART_RXC_vect) {
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
     timer_counter++;
-    PORTB ^= (1<<PB0);    
+    LED_PORT ^= (1<<LED_PIN);  
 }
 
 //funcion de manejo de volumen
@@ -287,7 +291,9 @@ void boot_splash(void){
 }    
 
 void boot(void){ //funcion de inicio
-    DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1) | (1 << PB0); //configurar pb0,pb1,pb5 como salidas
+    DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1); //configurar pb0,pb1,pb5 como salidas para el OLED
+    DDRD |= (1 << LED_PIN); //configurar PD6 como salida LED de status
+    
     DDRC = 0xFF; // Inicializar puerto C como salida USART
     OLED_Init(); // Inicializar OLED
     adc_init(); // Inicializar el ADC
@@ -295,7 +301,7 @@ void boot(void){ //funcion de inicio
     timer_init();
     sei();
     boot_splash();
-    PORTB |= (1 << PB0);
+    LED_PORT |= (1 << LED_PIN);    
 }
 
 int main(void){
