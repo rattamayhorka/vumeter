@@ -105,6 +105,7 @@ AVRDUDE_PROGRAMMER = arduino
 #AVRDUDE_PORT = com1	   # programmer connected to serial device
 #AVRDUDE_PORT = /dev/cu.KeySerial1	   # programmer connected to serial device
 AVRDUDE_PORT = /dev/ttyACM0		#for original arduino uno 
+#AVRDUDE_PORT = /dev/ttyUSB0
 #AVRDUDE_PORT = /dev/ttyUSB1
 #AVRDUDE_PORT = lpt1	# programmer connected to parallel port
 
@@ -199,22 +200,23 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 #Ext Crystal/Resonator, Medium Freq, 16K CK + 64ms l-0xFD h-0x99 
 # Default target.
+
+#Int. Rc Osc. 8Mhz; Start-up time: 6ck + 64ms l-0xE4 h-0x99
+
+
 all: begin gccversion sizebefore $(TARGET).elf $(TARGET).hex $(TARGET).eep \
 	$(TARGET).lss $(TARGET).sym sizeafter finished end
 
 full: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xFD:m -u -U hfuse:w:0x99:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xE4:m -u -U hfuse:w:0x99:m
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -U flash:w:$< 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -U eeprom:w:iveep.hex
 
-
 burn-fuse: 
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xFD:m -u -U hfuse:w:0x99:m
-
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:w:0xE4:m -u -U hfuse:w:0x99:m
 
 read-fuse:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -u -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h
-
 
 reset:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) 
