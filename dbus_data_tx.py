@@ -92,7 +92,6 @@ def recopilar_data():
 
         time.sleep(1)
 
-
 def pc_vars(): # Función para enviar datos sin afectar con el tiempo de espera de la transmision
     
     while True:
