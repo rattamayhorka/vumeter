@@ -163,7 +163,8 @@ ISR(USART_RXC_vect) {
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
     timer_counter++;
-    PORTD ^= (1<<PD6);  
+    PORTD ^= (1<<PD6);
+    
 }
 
 //funcion de manejo de volumen
