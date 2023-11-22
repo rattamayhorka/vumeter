@@ -110,9 +110,6 @@ def pc_vars(): # Función para enviar datos sin afectar con el tiempo de espera 
                 text=True  # Asegura que la salida sea una cadena de texto (str)
             ).strip()  # Elimina espacios en blanco al principio y al final
 
-            #temp1 = float(temp1)
-            #temp2 = float(temp2)
-            
             temp = ( float(temp1) + float(temp2) ) / 2
 
             root_capacity = subprocess.check_output(
@@ -150,7 +147,7 @@ def pc_vars(): # Función para enviar datos sin afectar con el tiempo de espera 
                 text=True  # Asegura que la salida sea una cadena de texto (str)
             ).strip()  # Elimina espacios en blanco al principio y al final
 
-            output = f"\awifi: {wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
+            output = f"\awifi: {wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
 
             print(output)  # Imprime la salida
 

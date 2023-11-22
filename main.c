@@ -78,6 +78,8 @@ void scrollBuffer(char *buffer, int bufferSize, int j) {
             buffer[i] = 0xFA;
         } else if (buffer[i] == ']') {
             buffer[i] = 0xFC;
+        } else if (buffer[i] == 0xC2) {
+            buffer[i] = 0x80;
         }
     }
 
