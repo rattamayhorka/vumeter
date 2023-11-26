@@ -44,8 +44,8 @@ def recopilar_data():
     service_name = ""
     prev_output = ""
     reproductor = ""
-    time_until_print_pc_vars = 60
-    wait_printing_pc_vars = 10
+    time_until_print_pc_vars = 15
+    wait_printing_pc_vars = 15
     while True:
         try:
             player_lines = obtener_reproductores_activos()
@@ -141,7 +141,7 @@ def recopilar_data():
                 reproductor = ""
 
             else:
-                output = f"\aEsperando\ndatos...{contador}\n{title}\n\n"
+                output = f"\aEsperando\ndatos...\n{title}\n\n"
 
             if contador >= time_until_print_pc_vars:
                 output = f"\awifi: {wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
