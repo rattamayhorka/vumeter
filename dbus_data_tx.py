@@ -144,7 +144,7 @@ def recopilar_data():
                 output = f"\aEsperando\nReproductor...\n\n\n"
 
             if contador >= time_until_print_pc_vars:
-                output = f"\aw:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
+                output = f"\awifi: {wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
 
             if contador == time_until_print_pc_vars + wait_printing_pc_vars:
                 contador = 0

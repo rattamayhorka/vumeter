@@ -310,8 +310,6 @@ int main(void){
     boot();
     OLED_gotoxy(0,0); OLED_Puts("Esperando");
     OLED_gotoxy(0,1); OLED_Puts("conexion a PC...");
-
-    uint16_t prevAdcValue = 255; //valor especifico para que no mande "ruido"
  
     while (1) {
         aState_1 = read_encoder();
