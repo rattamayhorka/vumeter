@@ -141,10 +141,10 @@ def recopilar_data():
                 reproductor = ""
 
             else:
-                output = f"\aEsperando\ndatos...\n{title}\n\n"
+                output = f"\aEsperando\nReproductor...\n\n\n"
 
             if contador >= time_until_print_pc_vars:
-                output = f"\awifi: {wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
+                output = f"\aw:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
 
             if contador == time_until_print_pc_vars + wait_printing_pc_vars:
                 contador = 0
@@ -156,7 +156,7 @@ def recopilar_data():
         except Exception as e:
             print(f"Error: {e}") # Maneja otras excepciones
         contador += 1
-        time.sleep(1)
+        time.sleep(3)
 
 # llamada de funcion / tipo interrupcion
 data_thread = threading.Thread(target=recopilar_data)

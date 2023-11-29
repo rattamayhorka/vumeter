@@ -11,38 +11,50 @@
 #define NUM_BUFFERS 4 //Número de buffers (artist, title, album)
 #define HISTERESIS 1 //Número que se maneja para eliminar el error en la entrada del ADC 
 
+#define PD2_MASK (1 << PD2)
+#define PD3_MASK (1 << PD3)
+
 char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
 char year_buffer[USART_BUFFER_SIZE];
 
+char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
+
 volatile uint8_t usart_buffer_index = 0;
 
-char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 int current_buffer_index = 0;
 int j = 0;
-volatile uint8_t timer_counter = 0;
-const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
+
+volatile uint8_t interrupt_timer_counter = 0;
+//const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
 
 uint32_t prevVolume = 0;
-
 
 const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
 const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
 
+int counter_1 = 0;
+int aState_1;
+int aLastState_1;
+
+void init_encoder(void){
+    DDRD &= ~PD2_MASK;  // PD2 como entrada (CLK)
+    DDRD &= ~PD3_MASK;  // PD3 como entrada (DT)
+    PORTD |= PD2_MASK | PD3_MASK;  // Habilitar resistencias de pull-up
+}
+
+int read_encoder(void){
+    return ((PIND & PD2_MASK) >> PD2) | (((PIND & PD3_MASK) >> PD3) << 1);
+}
+
 void usart_init(void){
     UBRRH = (BAUDRATE>>8); // Configurar la velocidad de comunicación en 9600 bps
     UBRRL = BAUDRATE;
-    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
-    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    //se agrego rxcie para usar como interrupciones
+    UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de 
 }
 
-void adc_init(void){
-    // Configurar el ADC para el pin 0 del puerto A (PA0)
-    ADMUX = (1 << REFS0); // Usar AVCC como referencia y configurar el canal a PA0
-    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1); // Habilitar ADC y configurar el prescaler
-}
 
 void timer_init(void){
     TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
@@ -50,17 +62,11 @@ void timer_init(void){
     TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
 
-uint16_t adc_read(void){
-    // Leer el valor del ADC en el pin 0 del puerto A (PA0)
-    ADCSRA |= (1 << ADSC); // Iniciar la conversión
-    while (ADCSRA & (1 << ADSC)); // Esperar a que la conversión termine
-    return ADC; // Devolver el valor convertido
-}
-
 void usart_transmit(unsigned char data){
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
     UDR = data; // Enviar el dato
 }
+
 
 void scrollBuffer(char *buffer, int bufferSize, int j) {
     char first_buffer[21];
@@ -133,7 +139,7 @@ ISR(USART_RXC_vect) {
         }
         usart_buffer_index = 0; // Reiniciar el índice del buffer actual
         current_buffer_index = 0; // Reiniciar el índice del buffer actual
-        timer_counter = 0; // Reiniciar el contador de tiempo
+        interrupt_timer_counter = 0; // Reiniciar el contador de tiempo
     } else if (received_data == '\n') {
         // Cambiar al siguiente buffer cuando se recibe '\n'
         current_buffer_index++;
@@ -158,13 +164,13 @@ ISR(USART_RXC_vect) {
 
         // Terminar la cadena en el buffer para que sea una cadena válida de C
         current_buffer[usart_buffer_index] = '\0';
-        timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
+        interrupt_timer_counter = 0; // Reiniciar el contador de tiempo cuando se recibe un carácter
     }
 }
 
 //Rutina de interrupción para el desbordamiento del temporizador
 ISR(TIMER1_OVF_vect){
-    timer_counter++;
+    interrupt_timer_counter++;
     PORTD ^= (1<<PD6);
     
 }
@@ -182,69 +188,65 @@ void set_volume(uint32_t adcValue){
         prevVolume = volume;
     }
 }
+
 void boot_splash(void){
+    //bloques
     OLED_gotoxy(0,0); 
     for(int i = 0; i < 20; ++i){
         OLED_Data(0x1F);
         _delay_ms(50);    
-    }
+    }//BLOQUES ANTES DE HECHO POR
     OLED_gotoxy(0,1); 
-    for(int i = 0; i < 6; ++i){
+    for(int i = 0; i < 5; ++i){
         OLED_Data(0x1F);
         _delay_ms(50);    
-    }
+    }//HECHO POR
     for (int i = 0; i < 10; ++i){
         OLED_Data(buffer_saludo[i]);
         _delay_ms(50);
-    }
+    }//BLOQUES DESPUES DE HECHO POR
     for(int i = 0; i < 6; ++i){
         OLED_Data(0x1F);
         _delay_ms(50);    
-    }
+    }//BLOQUES ANTES DE RATTAMAYHORKA
     OLED_gotoxy(0,2);
-    for(int i = 0; i < 4; ++i){
+    for(int i = 0; i < 3; ++i){
         OLED_Data(0x1F);
         _delay_ms(50);    
-    }
-
+    }//RATTAMAYHORKA
     for (int i = 0; i < 14; ++i){
         OLED_Data(buffer_nombre[i]);
         _delay_ms(50);
-    }
-
+    }//BLOQUES DESPUES DE RATTAMAYHORKA
     for(int i = 0; i < 4; ++i){
         OLED_Data(0x1F);
         _delay_ms(50);    
-    }
-
+    }//BLOQUE DE TODA LA LINEA 4
     OLED_gotoxy(0,3); 
     for(int i = 0; i < 20; ++i){
         OLED_Data(0x1F);
         _delay_ms(50);    
-    }
-//REINICIO DE SECUENCIA
+    }///BORRADO DE PRIMERA LINEA
     OLED_gotoxy(0,0); 
     for(int i = 0; i < 20; ++i){
         OLED_Data(0x20);
         _delay_ms(50);    
-    }
+    }//BORRADO ANTES DE HECHO POR
     OLED_gotoxy(0,1); 
-    for(int i = 0; i < 6; ++i){
+    for(int i = 0; i < 5; ++i){
         OLED_Data(0x20);
         _delay_ms(50);    
-    }
-
+    }//HECHO POR
     for (int i = 0; i < 10; ++i){
         OLED_Data(buffer_saludo[i]);
         _delay_ms(50);
-    }
-
+    }//BORRADO DESPUES DE HEHOC POR
     for(int i = 0; i < 6; ++i){
         OLED_Data(0x20);
         _delay_ms(50);    
-    }
+    }//BORRADO ANTES DE RATTAMAYHORKA
     OLED_gotoxy(0,2);
-    for(int i = 0; i < 4; ++i){
+    for(int i = 0; i < 3; ++i){
         OLED_Data(0x20);
         _delay_ms(50);    
     }
@@ -264,7 +266,6 @@ void boot_splash(void){
         OLED_Data(0x20);
         _delay_ms(50);    
     }
-
 
     OLED_gotoxy(0,0); 
     for(int i = 0; i < 20; ++i){
@@ -299,30 +300,39 @@ void boot(void){ //funcion de inicio
     DDRD &= ~(1 << PC2); //entradas
 
     OLED_Init(); // Inicializar OLED
-    adc_init(); // Inicializar el ADC
-    usart_init(); // Inicializar USART    
     timer_init();
-    sei();
     boot_splash();
+    usart_init(); // Inicializar USART    
+    sei();
     PORTD |= (1 << PD6);    
 }
-
 int main(void){
     boot();
     OLED_gotoxy(0,0); OLED_Puts("Esperando");
     OLED_gotoxy(0,1); OLED_Puts("conexion a PC...");
 
     uint16_t prevAdcValue = 255; //valor especifico para que no mande "ruido"
+ 
+    while (1) {
+        aState_1 = read_encoder();
 
-    while (1){
-        uint16_t adcValue = adc_read();
-    
-        if (adcValue + HISTERESIS <= prevAdcValue || adcValue - HISTERESIS >= prevAdcValue ){
-            set_volume(adcValue);
-            usart_transmit('\n');
+        if (aState_1 != aLastState_1) {
+            if ((aLastState_1 == 0b00 && aState_1 == 0b01) || (aLastState_1 == 0b01 && aState_1 == 0b11) ||
+                (aLastState_1 == 0b11 && aState_1 == 0b10) || (aLastState_1 == 0b10 && aState_1 == 0b00)) {
+                counter_1++;
+            } else if ((aLastState_1 == 0b00 && aState_1 == 0b10) || (aLastState_1 == 0b01 && aState_1 == 0b00) ||
+                       (aLastState_1 == 0b11 && aState_1 == 0b01) || (aLastState_1 == 0b10 && aState_1 == 0b11)) {
+                counter_1--;
+            }
+            // Salida de depuración por puerto serie
+            char message[20];
+            sprintf(message, "Counter: %d\n", counter_1);
+            for (int i = 0; message[i] != '\0'; i++) {
+                usart_transmit(message[i]);
+            }
         }
-        prevAdcValue = adcValue +2 ; //mantiene el valor de ADC para no enviar ruido
-        
-        _delay_ms(100);
+
+        aLastState_1 = aState_1;
+        _delay_ms(10);  // Pequeña pausa para evitar lecturas rápidas del encoder
     }
 }
