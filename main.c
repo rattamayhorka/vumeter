@@ -18,6 +18,8 @@ char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
 char year_buffer[USART_BUFFER_SIZE];
+char message[10];
+
 
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 
@@ -25,6 +27,7 @@ volatile uint8_t usart_buffer_index = 0;
 
 int current_buffer_index = 0;
 int j = 0;
+int i = 0;
 
 volatile uint8_t interrupt_timer_counter = 0;
 //const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
@@ -175,20 +178,6 @@ ISR(TIMER1_OVF_vect){
     
 }
 
-//funcion de manejo de volumen
-void set_volume(uint32_t adcValue){
-    char message[20];
-    uint32_t volume = (uint32_t)((adcValue * 100) / 1024); //convierte adcValue a un valor de volumen en el rango de 0 a 100
-    volume = (uint32_t)volume; // Convierte a uint32_t, para eliminar los decimales
-    if (volume != prevVolume) { //si el valor de volumen no ha cambiado, no lo manda por USART
-        sprintf(message, "%ld", volume); // Construir el mensaje con el valor de volumen de numeros a caracteres.
-        for (int i = 0; message[i] != '\0'; i++) {
-            usart_transmit(message[i]); // Enviar el mensaje por USART
-        }
-        prevVolume = volume;
-    }
-}
-
 void boot_splash(void){
     //bloques
     OLED_gotoxy(0,0); 
@@ -301,7 +290,7 @@ void boot(void){ //funcion de inicio
 
     OLED_Init(); // Inicializar OLED
     timer_init();
-    boot_splash();
+    //boot_splash();
     usart_init(); // Inicializar USART    
     sei();
     PORTD |= (1 << PD6);    
@@ -316,21 +305,27 @@ int main(void){
 
         if (aState_1 != aLastState_1) {
             if ((aLastState_1 == 0b00 && aState_1 == 0b01) || (aLastState_1 == 0b01 && aState_1 == 0b11) ||
-                (aLastState_1 == 0b11 && aState_1 == 0b10) || (aLastState_1 == 0b10 && aState_1 == 0b00)) {
-                counter_1++;
-            } else if ((aLastState_1 == 0b00 && aState_1 == 0b10) || (aLastState_1 == 0b01 && aState_1 == 0b00) ||
-                       (aLastState_1 == 0b11 && aState_1 == 0b01) || (aLastState_1 == 0b10 && aState_1 == 0b11)) {
-                counter_1--;
-            }
-            // Salida de depuración por puerto serie
-            char message[20];
-            sprintf(message, "Counter: %d\n", counter_1);
-            for (int i = 0; message[i] != '\0'; i++) {
-                usart_transmit(message[i]);
-            }
+    (aLastState_1 == 0b11 && aState_1 == 0b10) || (aLastState_1 == 0b10 && aState_1 == 0b00)) {
+                //counter_1++;
+                char debug_message[20];
+                sprintf(debug_message, "-i 1\n");
+                for (int i = 0; debug_message[i] != '\0'; i++) {
+                    usart_transmit(debug_message[i]);
+                }
+
+            } 
+        }
+        if ((aLastState_1 == 0b00 && aState_1 == 0b10) || (aLastState_1 == 0b01 && aState_1 == 0b00) ||
+    (aLastState_1 == 0b11 && aState_1 == 0b01) || (aLastState_1 == 0b10 && aState_1 == 0b11)) {
+                char debug_message[20];
+                sprintf(debug_message, "-d 1\n");
+                for (int i = 0; debug_message[i] != '\0'; i++) {
+                    usart_transmit(debug_message[i]);
+                }
+                //usart_transmit("-d 1");
         }
 
         aLastState_1 = aState_1;
-        _delay_ms(10);  // Pequeña pausa para evitar lecturas rápidas del encoder
+        _delay_ms(5);  // Pequeña pausa para evitar lecturas rápidas del encoder
     }
 }

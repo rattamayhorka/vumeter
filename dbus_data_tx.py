@@ -166,21 +166,18 @@ data_thread.start()
 try:
     char_buffer = ""  # Buffer para acumular caracteres
     while True:
-        byte = ser.read(1) # Lee un byte desde el puerto serie
-        char_value = byte.decode('ascii', errors='ignore')  # Ignorar caracteres no ASCII, Convierte el byte a una cadena de caracteres utilizando ASCII
+        byte = ser.read(1)  # Lee un byte desde el puerto serie
+        char_value = byte.decode('ascii', errors='ignore')  # Convierte el byte a una cadena de caracteres utilizando ASCII
+        char_buffer += char_value
 
-        if char_value.isdigit(): #verifica si es un digito (0-9)
-            char_buffer += char_value # Acumula el carácter en el buffer
-        else:
-            if char_buffer:
-                num_value = int(char_buffer)  # Convierte el buffer en un número entero
-                if num_value > 99: # Ajusta num_value al rango de 0 a 99 aunque sea mayor
-                    num_value = 99
-                result_str = str(num_value) # Convierte num_value a un string para pasarlo al comando en linux
-                subprocess.run(["pamixer", "--set-volume", result_str]) # comando para establecer el volumen en linux
-                print(result_str)
-                char_buffer = "" # Limpia el buffer
-
+        # Si se recibe un carácter de nueva línea, ejecuta el comando y reinicia el buffer
+        if char_value == '\n':
+            # Dividir el comando y el valor
+            command, value = char_buffer.strip().split(' ')
+            subprocess.run(["pamixer", command, value])
+             
+            char_buffer = ""  # Limpia el buffer
+            
 except KeyboardInterrupt:
     ser.close()    # salida por Ctrl+C
     print("\nPuerto serie cerrado.")

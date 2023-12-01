@@ -56,8 +56,6 @@ void OLED_Command(unsigned char data){ // Command Writing Function
   PORTB &= ~(1 << CS); // clearSC() CS MUST be low for that transfer of data
   _delay_us(1);
 
-  // Send 0b00011111 to enter command write mode
-  //uint8_t writeCommand = 0b00011111;
   putData(0b00011111);
 
   putData(firstByte);
@@ -143,13 +141,10 @@ void OLED_Home(void){
 }
 
 
-void OLED_Puts(const char *s){
-// print string on lcd (no auto linefeed)
-
-    register char c;
-
-    while ( (c = *s++) ) {
-        OLED_Data(c);
-    }
+void OLED_Puts(const char *s){ // print string on lcd (no auto linefeed)
+  register char c;
+  while ((c = *s++)){
+    OLED_Data(c);
+  }
 
 }
