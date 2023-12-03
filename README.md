@@ -22,9 +22,9 @@ Este script de Python interactúa con reproductores multimedia a traves de D-Bus
 
 ## Hardware
 
-- [NHD-0420CW OLED SLIM DISPLAY] (https://newhavendisplay.com/content/specs/NHD-0420CW-AY3.pdf)
-- [ATMEGA32](https://ww1.microchip.com/downloads/en/DeviceDoc/doc2503.pdf)
-- [USB - SERIAL TTL ](https://www.tostatronic.com/product/convertidor-ttl-pl2303-usb-to-rs232-ttl-converter/?gad_source=1&gclid=Cj0KCQiA67CrBhC1ARIsACKAa8TZjBnonuWXY4yLTC7wkeTdMWY1l-ocxSXjfy_Q063HC-wARc6UHUAaAhSuEALw_wcB)
+- NEW-HEAVEN OLED DISPLAY [NHD-0420CW OLED SLIM DISPLAY] (https://newhavendisplay.com/content/specs/NHD-0420CW-AY3.pdf)
+- MICROCHIP ATMEGA-32 MICROCONTROLLER [ATMEGA32](https://ww1.microchip.com/downloads/en/DeviceDoc/doc2503.pdf)
+- USB SERIAL CONVERTER [USB - SERIAL TTL ](https://www.tostatronic.com/product/convertidor-ttl-pl2303-usb-to-rs232-ttl-converter/?gad_source=1&gclid=Cj0KCQiA67CrBhC1ARIsACKAa8TZjBnonuWXY4yLTC7wkeTdMWY1l-ocxSXjfy_Q063HC-wARc6UHUAaAhSuEALw_wcB)
 
 ## Conexiones: 
 
