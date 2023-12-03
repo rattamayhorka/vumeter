@@ -22,31 +22,36 @@ Este script de Python interactúa con reproductores multimedia a traves de D-Bus
 
 ## Conexiones: 
 
-#define SCL PB6
-#define SDI PB5
-#define CS PB1
+#define SCL PB6  
+#define SDI PB5  
+#define CS PB1  
 
-OLED CONNECTIONS  PCB / ATMEGA CONNECTIONS 
-1  - VSS              GND
-2  - VDD              VOLTAGE
-3  - REGVDD           VOLTAGE
-4  - D/C              GND
-5  - R/W              GND
-6  - E                GND
-7  - D0 [SCLK]        PB6
-8  - D1 [SDI]         PB5
-9  - D2               GND
-10 - D3               GND
-11 - D4               GND
-12 - D5               GND
-13 - D6               GND
-14 - D7               GND
-15 - CS               PB1
-16 - RES              VOLTAGE
-17 - BS0 [SERIAL]     GND
-18 - BS1 [SERIAL]     GND
-19 - BS2 [SERIAL]     GND
-20 - VSS(FRAMEGROUND) GND
+Serial interface NHD-0420CW configuration:
+BS0 - GND  
+BS1 - GND  
+BS2 - GND  
+
+OLED CONNECTIONS  PCB / ATMEGA CONNECTIONS   
+1  - VSS              GND  
+2  - VDD              VOLTAGE  
+3  - REGVDD           VOLTAGE  
+4  - D/C              GND  
+5  - R/W              GND  
+6  - E                GND  
+7  - D0 [SCLK]        PB6  
+8  - D1 [SDI]         PB5  
+9  - D2               GND  
+10 - D3               GND  
+11 - D4               GND  
+12 - D5               GND  
+13 - D6               GND  
+14 - D7               GND  
+15 - CS               PB1  
+16 - RES              VOLTAGE  
+17 - BS0 [SERIAL]     GND  
+18 - BS1 [SERIAL]     GND  
+19 - BS2 [SERIAL]     GND  
+20 - VSS(FRAMEGROUND) GND  
 
 ## Configuración
 
