@@ -44,8 +44,8 @@ def recopilar_data():
     service_name = ""
     prev_output = ""
     reproductor = ""
-    time_until_print_pc_vars = 15
-    wait_printing_pc_vars = 15
+    time_until_print_pc_vars = 90
+    wait_printing_pc_vars = 3
     while True:
         try:
             player_lines = obtener_reproductores_activos()
@@ -144,7 +144,7 @@ def recopilar_data():
                 output = f"\aEsperando\nReproductor...\n\n\n"
 
             if contador >= time_until_print_pc_vars:
-                output = f"\awifi: {wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
+                output = f"\awifi:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
 
             if contador == time_until_print_pc_vars + wait_printing_pc_vars:
                 contador = 0
@@ -177,7 +177,7 @@ try:
             subprocess.run(["pamixer", command, value])
              
             char_buffer = ""  # Limpia el buffer
-            
+
 except KeyboardInterrupt:
     ser.close()    # salida por Ctrl+C
     print("\nPuerto serie cerrado.")
