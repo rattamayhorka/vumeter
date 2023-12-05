@@ -11,14 +11,17 @@
 #define NUM_BUFFERS 4 //Número de buffers (artist, title, album)
 #define HISTERESIS 1 //Número que se maneja para eliminar el error en la entrada del ADC 
 
-#define PD2_MASK (1 << PD2)
-#define PD3_MASK (1 << PD3)
+
+
+#define DISPLAY_WIDTH 20
+#define DISPLAY_HEIGHT 4
+
 
 char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
 char year_buffer[USART_BUFFER_SIZE];
-char message[10];
+//char message[10];
 
 
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
@@ -26,29 +29,28 @@ char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buf
 volatile uint8_t usart_buffer_index = 0;
 
 int current_buffer_index = 0;
-int j = 0;
-int i = 0;
+//int j = 0;
+//int i = 0;
 
 volatile uint8_t interrupt_timer_counter = 0;
 //const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
 
-uint32_t prevVolume = 0;
+//uint32_t prevVolume = 0;
 
 const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
 const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
 
-int counter_1 = 0;
+//int counter_1 = 0;
 int aState_1;
 int aLastState_1;
 
-void init_encoder(void){
-    DDRD &= ~PD2_MASK;  // PD2 como entrada (CLK)
-    DDRD &= ~PD3_MASK;  // PD3 como entrada (DT)
-    PORTD |= PD2_MASK | PD3_MASK;  // Habilitar resistencias de pull-up
-}
+static uint8_t switchStatePC0 = 0;
+static uint8_t switchStatePC1 = 0;
+static uint8_t switchStatePD4 = 0;
+static uint8_t switchStatePD7 = 0;
 
 int read_encoder(void){
-    return ((PIND & PD2_MASK) >> PD2) | (((PIND & PD3_MASK) >> PD3) << 1);
+    return ((PIND & (1 << PD2)) >> PD2) | (((PIND & (1 << PD3)) >> PD3) << 1);
 }
 
 void usart_init(void){
@@ -57,7 +59,6 @@ void usart_init(void){
     UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de 
 }
-
 
 void timer_init(void){
     TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
@@ -280,21 +281,31 @@ void boot_splash(void){
     OLED_gotoxy(0,0);
 }    
 
-void boot(void){ //funcion de inicio
+void ports_init(void){ //funcion de inicio
     DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1); //configurar pb0,pb1,pb5 como salidas para el OLED
-    DDRD |= (1 << PD4) | (1 << PD5) | (1 << PD6); //configurar PD6 como salida LED de status
     
-    DDRD &= ~(1 << PC0); //entradas
-    DDRD &= ~(1 << PC1); //entradas
-    DDRD &= ~(1 << PC2); //entradas
+    DDRD |= (1 << PD6); //configurar PD6 como salida LED heartbeat
+        
+    DDRC &= ~(1 << PD7); // botones multimedia
+    DDRC &= ~(1 << PC0); // botones multimedia
+    DDRC &= ~(1 << PC1); // botones multimedia
 
+    DDRD &= ~(1 << PD4);  // PD4 como entrada (SW - encoder)
+    DDRD &= ~(1 << PD2);  // PD2 como entrada (CLK - encoder)
+    DDRD &= ~(1 << PD3);  // PD3 como entrada (DT - encoder)
+    PORTD |= (1 << PD2) | (1 << PD3);  // Habilitar resistencias de pull-up
+}
+
+void boot(void){ //funcion de inicio
+    ports_init();
     OLED_Init(); // Inicializar OLED
     timer_init();
-    //boot_splash();
+    boot_splash();
     usart_init(); // Inicializar USART    
     sei();
     PORTD |= (1 << PD6);    
 }
+
 int main(void){
     boot();
     OLED_gotoxy(0,0); OLED_Puts("Esperando");
@@ -306,7 +317,6 @@ int main(void){
         if (aState_1 != aLastState_1) {
             if ((aLastState_1 == 0b00 && aState_1 == 0b01) || (aLastState_1 == 0b01 && aState_1 == 0b11) ||
     (aLastState_1 == 0b11 && aState_1 == 0b10) || (aLastState_1 == 0b10 && aState_1 == 0b00)) {
-                //counter_1++;
                 char debug_message[20];
                 sprintf(debug_message, "-i 1\n");
                 for (int i = 0; debug_message[i] != '\0'; i++) {
@@ -322,10 +332,67 @@ int main(void){
                 for (int i = 0; debug_message[i] != '\0'; i++) {
                     usart_transmit(debug_message[i]);
                 }
-                //usart_transmit("-d 1");
+
         }
 
         aLastState_1 = aState_1;
+        if (!(PINC & (1 << PC0))) {
+            if (switchStatePC0 == 0) {
+                // El estado del interruptor ha cambiado a presionado
+                char debug_message[20];
+                sprintf(debug_message, "next\n");
+                for (int i = 0; debug_message[i] != '\0'; i++) {
+                    usart_transmit(debug_message[i]);
+                }
+                switchStatePC0 = 1;
+            }
+        } else {
+            switchStatePC0 = 0;
+        }
+
+        if (!(PINC & (1 << PC1))) {
+            if (switchStatePC1 == 0) {
+                // El estado del interruptor ha cambiado a presionado
+                char debug_message[20];
+                sprintf(debug_message, "prev\n");
+                for (int i = 0; debug_message[i] != '\0'; i++) {
+                    usart_transmit(debug_message[i]);
+                }
+                switchStatePC1 = 1;
+            }
+        } else {
+            switchStatePC1 = 0;
+        }
+
+        if (!(PIND & (1 << PD4))) {
+            if (switchStatePD4 == 0) {
+                // El estado del interruptor ha cambiado a presionado
+                char debug_message[20];
+                sprintf(debug_message, "-t 1\n");
+                for (int i = 0; debug_message[i] != '\0'; i++) {
+                    usart_transmit(debug_message[i]);
+                }
+                switchStatePD4 = 1;
+            }
+        } else {
+            switchStatePD4 = 0;
+        }
+
+        if (!(PIND & (1 << PD7))) {
+            if (switchStatePD7 == 0) {
+                // El estado del interruptor ha cambiado a presionado
+                char debug_message[20];
+                sprintf(debug_message, "play\n");
+                for (int i = 0; debug_message[i] != '\0'; i++) {
+                    usart_transmit(debug_message[i]);
+                }
+                switchStatePD7 = 1;
+            }
+        } else {
+            switchStatePD7 = 0;
+        }
+
         _delay_ms(5);  // Pequeña pausa para evitar lecturas rápidas del encoder
+        //_delay_ms(100);  // Pequeña pausa para evitar lecturas rápidas del encoder
     }
 }

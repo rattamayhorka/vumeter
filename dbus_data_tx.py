@@ -2,6 +2,8 @@ import serial
 import subprocess
 import pydbus
 import time
+import pyautogui
+
 from unidecode import unidecode
 import threading
 
@@ -169,14 +171,26 @@ try:
         byte = ser.read(1)  # Lee un byte desde el puerto serie
         char_value = byte.decode('ascii', errors='ignore')  # Convierte el byte a una cadena de caracteres utilizando ASCII
         char_buffer += char_value
-
         # Si se recibe un carácter de nueva línea, ejecuta el comando y reinicia el buffer
+        print(char_buffer) 
         if char_value == '\n':
-            # Dividir el comando y el valor
-            command, value = char_buffer.strip().split(' ')
-            subprocess.run(["pamixer", command, value])
-             
-            char_buffer = ""  # Limpia el buffer
+            if "-" in char_buffer:
+                # Dividir el comando y el valor
+                command, value = char_buffer.strip().split(' ')
+                subprocess.run(["pamixer", command, value])
+                char_buffer = ""  # Limpia el buffer
+            elif "prev" in char_buffer:
+                subprocess.run(["cmus-remote", "-r"])
+                print("prev")
+                char_buffer = ""  # Limpia el buffer
+            elif "next" in char_buffer:
+                subprocess.run(["cmus-remote", "-n"])
+                print("next")
+                char_buffer = ""  # Limpia el buffer
+            elif "play" in char_buffer:
+                subprocess.run(["cmus-remote", "-p"])
+                print("next")
+                char_buffer = ""  # Limpia el buffer
 
 except KeyboardInterrupt:
     ser.close()    # salida por Ctrl+C

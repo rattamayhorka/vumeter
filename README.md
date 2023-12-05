@@ -17,6 +17,8 @@ Este script de Python interactúa con reproductores multimedia a traves de D-Bus
 
 - Python 3.x
 - [pydbus](https://pypi.org/project/pydbus/)
+- [pyautogui](https://)
+
 - [unidecode](https://pypi.org/project/Unidecode/)
 - [pamixer](https://man.archlinux.org/man/pamixer.1)
 
@@ -58,6 +60,10 @@ OLED CONNECTIONS  PCB / ATMEGA CONNECTIONS
 18 - BS1 [SERIAL]     GND  
 19 - BS2 [SERIAL]     GND  
 20 - VSS(FRAMEGROUND) GND  
+
+## Diagrama 
+
+
 
 ## Configuración
 

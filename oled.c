@@ -72,8 +72,6 @@ void OLED_Data(unsigned char data){
   PORTB &= ~(1 << CS); // clearSC() CS MUST be low for that transfer of data
   _delay_us(1);
 
-  // Send 0b00011111 to enter data write mode
-  //uint8_t writeData = 0b01011111;
   putData(0b01011111);
 
   putData(firstByte);
