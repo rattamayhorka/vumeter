@@ -44,10 +44,10 @@ const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K'
 int aState_1;
 int aLastState_1;
 
-static uint8_t switchStatePC0 = 0;
-static uint8_t switchStatePC1 = 0;
-static uint8_t switchStatePD4 = 0;
-static uint8_t switchStatePD7 = 0;
+static uint8_t switch_next = 0; //next
+static uint8_t switch_prev = 0; //prev
+static uint8_t switch_play = 0; //play 
+static uint8_t switch_mute = 0; //mute 
 
 int read_encoder(void){
     return ((PIND & (1 << PD2)) >> PD2) | (((PIND & (1 << PD3)) >> PD3) << 1);
@@ -70,7 +70,6 @@ void usart_transmit(unsigned char data){
     while (!(UCSRA & (1 << UDRE))); // Esperar a que el registro de transmisión esté vacío
     UDR = data; // Enviar el dato
 }
-
 
 void scrollBuffer(char *buffer, int bufferSize, int j) {
     char first_buffer[21];
@@ -116,7 +115,6 @@ void OLED_print(void){
     // Borra la pantalla LCD
     OLED_clrscr();
     OLED_gotoxy(0,0);
-    // Desplazar los buffers si su longitud es mayor a 20 caracteres
     
     scrollBuffer(artist_buffer, 20, 0);
     scrollBuffer(title_buffer, 20, 1);
@@ -309,7 +307,7 @@ void boot(void){ //funcion de inicio
 int main(void){
     boot();
     OLED_gotoxy(0,0); OLED_Puts("Esperando");
-    OLED_gotoxy(0,1); OLED_Puts("conexion a PC...");
+    OLED_gotoxy(0,1); OLED_Puts("Conexion a PC...");
  
     while (1) {
         aState_1 = read_encoder();
@@ -337,62 +335,61 @@ int main(void){
 
         aLastState_1 = aState_1;
         if (!(PINC & (1 << PC0))) {
-            if (switchStatePC0 == 0) {
+            if (switch_next == 0) {
                 // El estado del interruptor ha cambiado a presionado
                 char debug_message[20];
                 sprintf(debug_message, "next\n");
                 for (int i = 0; debug_message[i] != '\0'; i++) {
                     usart_transmit(debug_message[i]);
                 }
-                switchStatePC0 = 1;
+                switch_next = 1;
             }
         } else {
-            switchStatePC0 = 0;
+            switch_next = 0;
         }
 
         if (!(PINC & (1 << PC1))) {
-            if (switchStatePC1 == 0) {
+            if (switch_prev == 0) {
                 // El estado del interruptor ha cambiado a presionado
                 char debug_message[20];
                 sprintf(debug_message, "prev\n");
                 for (int i = 0; debug_message[i] != '\0'; i++) {
                     usart_transmit(debug_message[i]);
                 }
-                switchStatePC1 = 1;
+                switch_prev = 1;
             }
         } else {
-            switchStatePC1 = 0;
+            switch_prev = 0;
         }
 
         if (!(PIND & (1 << PD4))) {
-            if (switchStatePD4 == 0) {
+            if (switch_mute == 0) {
                 // El estado del interruptor ha cambiado a presionado
                 char debug_message[20];
                 sprintf(debug_message, "-t 1\n");
                 for (int i = 0; debug_message[i] != '\0'; i++) {
                     usart_transmit(debug_message[i]);
                 }
-                switchStatePD4 = 1;
+                switch_mute = 1;
             }
         } else {
-            switchStatePD4 = 0;
+            switch_mute = 0;
         }
 
         if (!(PIND & (1 << PD7))) {
-            if (switchStatePD7 == 0) {
+            if (switch_play == 0) {
                 // El estado del interruptor ha cambiado a presionado
                 char debug_message[20];
                 sprintf(debug_message, "play\n");
                 for (int i = 0; debug_message[i] != '\0'; i++) {
                     usart_transmit(debug_message[i]);
                 }
-                switchStatePD7 = 1;
+                switch_play = 1;
             }
         } else {
-            switchStatePD7 = 0;
+            switch_play = 0;
         }
-
         _delay_ms(5);  // Pequeña pausa para evitar lecturas rápidas del encoder
-        //_delay_ms(100);  // Pequeña pausa para evitar lecturas rápidas del encoder
+        
     }
 }

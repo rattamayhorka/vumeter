@@ -99,22 +99,31 @@ LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
 #
 #AVRDUDE_PROGRAMMER = dt006
 AVRDUDE_PROGRAMMER = arduino
+#AVRDUDE_PROGRAMMER = stk500
 #AVRDUDE_PROGRAMMER = usbtiny
 
 
 #AVRDUDE_PORT = com1	   # programmer connected to serial device
 #AVRDUDE_PORT = /dev/cu.KeySerial1	   # programmer connected to serial device
+
 AVRDUDE_PORT = /dev/ttyACM0		#for original arduino uno 
+
 #AVRDUDE_PORT = /dev/ttyUSB0
 #AVRDUDE_PORT = /dev/ttyUSB1
 #AVRDUDE_PORT = lpt1	# programmer connected to parallel port
 
-#BAUDRATE = 9600
-BAUDRATE = 115200
+BAUDRATE = 9600
+#BAUDRATE = 115200
+#BAUDRATE = 19200
+
+
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
+#FREQ = 125kHz
 AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -b $(BAUDRATE)
+#AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
+#AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) -b $(BAUDRATE) -B $(FREQ)
 
 # Uncomment the following if you want avrdude's erase cycle counter.
 # Note that this counter needs to be initialized first using -Yn,
@@ -277,7 +286,8 @@ extcoff: $(TARGET).elf
 
 # Program the device.  
 program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -U flash:w:$< 
+#	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -U flash:w:$< 
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:w:$< 
 
 
 # Create final output files (.hex, .eep) from ELF output file.
