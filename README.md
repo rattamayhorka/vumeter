@@ -1,6 +1,3 @@
-  
-
-
 # Vumeter - Tablero con Control de Volumen y Display OLED multimedia 
 
 Vumeter, es un proyecto con el que puedes mostrar en un OLED, información en tiempo real como Artista y Cancíón que se está reproduciendo en Linux, muy parecido a lo que era LCD Smartie, :D
@@ -34,12 +31,12 @@ Este script de Python interactúa con reproductores multimedia a traves de D-Bus
 #define SDI PB5  
 #define CS PB1  
 
-Serial interface NHD-0420CW configuration:
+## Serial interface NHD-0420CW configuration:
 BS0 - GND  
 BS1 - GND  
 BS2 - GND  
 
-OLED CONNECTIONS  PCB / ATMEGA CONNECTIONS   
+## OLED CONNECTIONS  PCB / ATMEGA CONNECTIONS   
 1  - VSS              GND  
 2  - VDD              VOLTAGE  
 3  - REGVDD           VOLTAGE  
@@ -59,11 +56,16 @@ OLED CONNECTIONS  PCB / ATMEGA CONNECTIONS
 17 - BS0 [SERIAL]     GND  
 18 - BS1 [SERIAL]     GND  
 19 - BS2 [SERIAL]     GND  
-20 - VSS(FRAMEGROUND) GND  
+20 - VSS(FRAMEGROUND) GND
+
+## ENCODER CONNECTIONS / ATMEGA CONNECTIONS   
+1  - GND              GND  
+2  - VCC              VOLTAGE  
+3  - SW               PD4  
+4  - DT               PD3  
+5  - CLK              PD2  
 
 ## Diagrama 
-
-
 
 ## Configuración
 
@@ -94,5 +96,3 @@ El script detectará reproductores multimedia activos y mostrará información s
 ## Autor
 
 [rattamayhorka]
-
-

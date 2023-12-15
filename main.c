@@ -46,8 +46,8 @@ int aLastState_1;
 
 static uint8_t switch_next = 0; //next
 static uint8_t switch_prev = 0; //prev
-static uint8_t switch_play = 0; //play 
-static uint8_t switch_mute = 0; //mute 
+static uint8_t switch_play = 0; //play
+static uint8_t switch_mute = 0; //mute
 
 int read_encoder(void){
     return ((PIND & (1 << PD2)) >> PD2) | (((PIND & (1 << PD3)) >> PD3) << 1);
@@ -279,18 +279,19 @@ void boot_splash(void){
     OLED_gotoxy(0,0);
 }    
 
-void ports_init(void){ //funcion de inicio
-    DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1); //configurar pb0,pb1,pb5 como salidas para el OLED
-    
+void ports_init(void){
+    DDRB |= (1 << PB6) | (1 << PB5) | (1 << PB1); //configurar PB1 as CS, PB5 [oled 8] as SDI, pb6 as SCL [oled 7] 
+
     DDRD |= (1 << PD6); //configurar PD6 como salida LED heartbeat
         
-    DDRC &= ~(1 << PD7); // botones multimedia
-    DDRC &= ~(1 << PC0); // botones multimedia
-    DDRC &= ~(1 << PC1); // botones multimedia
+    DDRC &= ~(1 << PD7); // botones multimedia (play)
+    DDRC &= ~(1 << PC0); // botones multimedia (next)
+    DDRC &= ~(1 << PC1); // botones multimedia (prev)
 
     DDRD &= ~(1 << PD4);  // PD4 como entrada (SW - encoder)
-    DDRD &= ~(1 << PD2);  // PD2 como entrada (CLK - encoder)
     DDRD &= ~(1 << PD3);  // PD3 como entrada (DT - encoder)
+    DDRD &= ~(1 << PD2);  // PD2 como entrada (CLK - encoder)
+
     PORTD |= (1 << PD2) | (1 << PD3);  // Habilitar resistencias de pull-up
 }
 
@@ -298,7 +299,7 @@ void boot(void){ //funcion de inicio
     ports_init();
     OLED_Init(); // Inicializar OLED
     timer_init();
-    boot_splash();
+    //boot_splash();
     usart_init(); // Inicializar USART    
     sei();
     PORTD |= (1 << PD6);    
