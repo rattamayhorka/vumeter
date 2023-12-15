@@ -67,6 +67,8 @@ BS2 - GND
 
 ## Diagrama 
 
+https://github.com/rattamayhorka/vumeter/blob/main/circuito.png
+
 ## Configuración
 
 Asegúrate de tener todos los requisitos instalados antes de ejecutar el script.
