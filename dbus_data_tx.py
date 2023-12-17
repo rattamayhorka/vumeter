@@ -189,7 +189,7 @@ try:
                 char_buffer = ""  # Limpia el buffer
             elif "play" in char_buffer:
                 subprocess.run(["cmus-remote", "-p"])
-                print("next")
+                print("play")
                 char_buffer = ""  # Limpia el buffer
 
 except KeyboardInterrupt:

@@ -11,36 +11,25 @@
 #define NUM_BUFFERS 4 //Número de buffers (artist, title, album)
 #define HISTERESIS 1 //Número que se maneja para eliminar el error en la entrada del ADC 
 
-
-
 #define DISPLAY_WIDTH 20
 #define DISPLAY_HEIGHT 4
-
 
 char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
 char year_buffer[USART_BUFFER_SIZE];
-//char message[10];
-
 
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 
 volatile uint8_t usart_buffer_index = 0;
 
 int current_buffer_index = 0;
-//int j = 0;
-//int i = 0;
 
 volatile uint8_t interrupt_timer_counter = 0;
-//const uint8_t ResetThreshold = 30; // Umbral de tiempo en decenas de milisegundos (1 segundos)
-
-//uint32_t prevVolume = 0;
 
 const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
 const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
 
-//int counter_1 = 0;
 int aState_1;
 int aLastState_1;
 
@@ -62,6 +51,7 @@ void usart_init(void){
 
 void timer_init(void){
     TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
+    //TCNT1 = 34286; // Valor inicial para 300 milisegundos con prescaler 64
     TCNT1 = 65472; // (65536 - 64) para 1 Hz
     TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
@@ -77,7 +67,6 @@ void scrollBuffer(char *buffer, int bufferSize, int j) {
     first_buffer[20] = '\0';  // Asegura que first_buffer sea una cadena válida de C
     OLED_gotoxy(0, 0);
 
-    // Itera sobre la cadena y reemplaza los caracteres específicos
     for (int i = 0; buffer[i] != '\0'; i++) {
         if (buffer[i] == '{') {
             buffer[i] = 0xFD;
@@ -103,7 +92,8 @@ void scrollBuffer(char *buffer, int bufferSize, int j) {
             temp[bufferSize] = '\0';  // Asegura que sea una cadena válida de C
             OLED_gotoxy(0, j);
             OLED_Puts(temp);
-            _delay_ms(300);  // Pausa antes de desplazar
+            _delay_ms(300);
+            //wait_for_timer_overflow();  // Espera al desbordamiento del temporizador
         }
     }
 
@@ -170,11 +160,8 @@ ISR(USART_RXC_vect) {
     }
 }
 
-//Rutina de interrupción para el desbordamiento del temporizador
-ISR(TIMER1_OVF_vect){
-    interrupt_timer_counter++;
-    PORTD ^= (1<<PD6);
-    
+ISR(TIMER1_OVF_vect) {
+    PORTD ^= (1 << PD6); // Invierte el estado del pin PD6 (encender/apagar LED)
 }
 
 void boot_splash(void){
