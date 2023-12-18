@@ -138,6 +138,13 @@ void OLED_Home(void){
   OLED_Command(0x02); // Return Home (0,0)
 }
 
+void OLED_Shift_R(void){
+  OLED_Command(0b00011100); //shift Right
+}
+
+void OLED_Shift_L(void){
+  OLED_Command(0b00011000); // shift Left
+}
 
 void OLED_Puts(const char *s){ // print string on lcd (no auto linefeed)
   register char c;

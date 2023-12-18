@@ -14,6 +14,18 @@
 #define DISPLAY_WIDTH 20
 #define DISPLAY_HEIGHT 4
 
+volatile uint8_t interrupt_timer_counter = 0;
+volatile uint8_t usart_buffer_index = 0;
+
+const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
+const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
+
+
+static uint8_t switch_next = 0; //next
+static uint8_t switch_prev = 0; //prev
+static uint8_t switch_play = 0; //play
+static uint8_t switch_mute = 0; //mute
+
 char artist_buffer[USART_BUFFER_SIZE];
 char title_buffer[USART_BUFFER_SIZE];
 char album_buffer[USART_BUFFER_SIZE];
@@ -21,22 +33,9 @@ char year_buffer[USART_BUFFER_SIZE];
 
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 
-volatile uint8_t usart_buffer_index = 0;
-
 int current_buffer_index = 0;
-
-volatile uint8_t interrupt_timer_counter = 0;
-
-const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
-const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
-
 int aState_1;
 int aLastState_1;
-
-static uint8_t switch_next = 0; //next
-static uint8_t switch_prev = 0; //prev
-static uint8_t switch_play = 0; //play
-static uint8_t switch_mute = 0; //mute
 
 int read_encoder(void){
     return ((PIND & (1 << PD2)) >> PD2) | (((PIND & (1 << PD3)) >> PD3) << 1);
@@ -61,7 +60,7 @@ void usart_transmit(unsigned char data){
     UDR = data; // Enviar el dato
 }
 
-void scrollBuffer(char *buffer, int bufferSize, int j) {
+void ScrollBuffer(char *buffer, int bufferSize, int j) {
     char first_buffer[21];
     strncpy(first_buffer, buffer, 20);  // Copia los primeros 20 caracteres de buffer a first_buffer
     first_buffer[20] = '\0';  // Asegura que first_buffer sea una cadena válida de C
@@ -93,7 +92,7 @@ void scrollBuffer(char *buffer, int bufferSize, int j) {
             OLED_gotoxy(0, j);
             OLED_Puts(temp);
             _delay_ms(300);
-            //wait_for_timer_overflow();  // Espera al desbordamiento del temporizador
+            
         }
     }
 
@@ -101,16 +100,34 @@ void scrollBuffer(char *buffer, int bufferSize, int j) {
     OLED_Puts(first_buffer);
 }
 
+void PrintBuffer(char *buffer, int j) {
+    for (int i = 0; buffer[i] != '\0'; i++) {
+        if (buffer[i] == '{') {
+            buffer[i] = 0xFD;
+        } else if (buffer[i] == '}') {
+            buffer[i] = 0xFF;
+        } else if (buffer[i] == '[') {
+            buffer[i] = 0xFA;
+        } else if (buffer[i] == ']') {
+            buffer[i] = 0xFC;
+        } else if (buffer[i] == 0xC2) {
+            buffer[i] = 0x80;
+        }
+    }
+    OLED_gotoxy(0, j);
+    OLED_Puts(buffer);
+}
+
 void OLED_print(void){
     // Borra la pantalla LCD
     OLED_clrscr();
     OLED_gotoxy(0,0);
-    
-    scrollBuffer(artist_buffer, 20, 0);
-    scrollBuffer(title_buffer, 20, 1);
-    scrollBuffer(album_buffer, 20, 2);
-    scrollBuffer(year_buffer, 20, 3);
 
+    PrintBuffer(artist_buffer, 0);
+    PrintBuffer(title_buffer, 1);
+    PrintBuffer(album_buffer, 2);
+    PrintBuffer(year_buffer, 3);
+    
     // Reinicia los buffers y el índice
     artist_buffer[0] = '\0';
     title_buffer[0] = '\0';

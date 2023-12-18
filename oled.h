@@ -43,5 +43,7 @@ void OLED_Puts(const char *s);
 
 void OLED_clrscr(void);
 void OLED_Home(void);
+void OLED_Shift_L(void);
+void OLED_Shift_R(void);
 
 #endif // OLED_H
