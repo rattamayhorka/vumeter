@@ -2,10 +2,8 @@ import serial
 import subprocess
 import pydbus
 import time
-import pyautogui
-
-from unidecode import unidecode
 import threading
+from unidecode import unidecode
 
 ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
 
@@ -137,7 +135,26 @@ def recopilar_data():
                             artist = artist.replace(' - Topic',"")
 
             if title and service_name and contador < time_until_print_pc_vars:
-                output = f"\a{reproductor}...:\n{artist}\n{title}\n\n"
+                max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
+                for i in range(max_len - 19):  # Ajuste aquí
+                    linea_1 = f"{reproductor}...:"
+                    linea_2 = artist
+                    linea_3 = title
+                    linea_4 = ""
+
+                    if len(reproductor) > 19:
+                        linea_1 = reproductor[i:i + 19]
+
+                    if len(artist) > 19:
+                        linea_2 = artist[i:i + 19]
+
+                    if len(title) > 19:
+                        linea_3 = title[i:i + 19]
+
+                    output = f"\a{linea_1}\n{linea_2}\n{linea_3}\n{linea_4}\n"
+                    send_serial(output)
+                    time.sleep(0.3)
+
                 artist = ""
                 title = ""
                 reproductor = ""
