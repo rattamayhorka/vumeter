@@ -66,7 +66,7 @@ BS2 - GND
 
 ## Diagrama 
 
-https://github.com/rattamayhorka/vumeter/blob/main/circuito.png
+![Image](https://github.com/rattamayhorka/vumeter/blob/main/circuito.png)
 
 ## Configuración
 
