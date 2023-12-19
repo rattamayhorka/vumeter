@@ -42,7 +42,6 @@ def recopilar_data():
     artist = ""
     title = ""
     service_name = ""
-    prev_output = ""
     reproductor = ""
     time_until_print_pc_vars = 90
     wait_printing_pc_vars = 3
@@ -134,30 +133,57 @@ def recopilar_data():
                         if ' - Topic' in artist: # Verifica si el título contiene " - " y divide en artist y title
                             artist = artist.replace(' - Topic',"")
 
-            if title and service_name and contador < time_until_print_pc_vars:
+            if title and service_name and (contador < time_until_print_pc_vars):
                 max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
-                for i in range(max_len - 19):  # Ajuste aquí
+
+                # Verifica si max_len es mayor a 20
+                if max_len > 20:
+                    for i in range(max_len - 19):  # Ajuste aquí
+                        linea_1 = f"{reproductor}...:"
+                        linea_2 = artist
+                        linea_3 = title
+                        linea_4 = ""
+
+                        '''
+                        if len(reproductor) > 19:
+                            linea_1 = reproductor[i:i + 19]
+
+                        if len(artist) > 19:
+                            linea_2 = artist[i:i + 19]
+
+                        if len(title) > 19:
+                            linea_3 = title[i:i + 19]
+                        '''
+                        if len(linea_1) > 19:
+                            linea_1 = linea_1[i:i + 19]
+
+                        if len(linea_2) > 19:
+                            linea_2 = linea_2[i:i + 19]
+
+                        if len(linea_3) > 19:
+                            linea_3 = linea_3[i:i + 19]
+
+                        output = f"\a{linea_1}\n{linea_2}\n{linea_3}\n{linea_4}\n"
+                        send_serial(output)
+                        time.sleep(0.3)
+
+                    artist = ""
+                    title = ""
+                    reproductor = ""
+                else:
+                    # Si max_len no es mayor a 20, imprime directamente
                     linea_1 = f"{reproductor}...:"
                     linea_2 = artist
                     linea_3 = title
                     linea_4 = ""
 
-                    if len(reproductor) > 19:
-                        linea_1 = reproductor[i:i + 19]
-
-                    if len(artist) > 19:
-                        linea_2 = artist[i:i + 19]
-
-                    if len(title) > 19:
-                        linea_3 = title[i:i + 19]
-
                     output = f"\a{linea_1}\n{linea_2}\n{linea_3}\n{linea_4}\n"
                     send_serial(output)
                     time.sleep(0.3)
 
-                artist = ""
-                title = ""
-                reproductor = ""
+                    artist = ""
+                    title = ""
+                    reproductor = ""
 
             else:
                 output = f"\aEsperando\nReproductor...\n\n\n"
@@ -167,15 +193,12 @@ def recopilar_data():
 
             if contador == time_until_print_pc_vars + wait_printing_pc_vars:
                 contador = 0
-
-            if output != prev_output:  # Verifica si la salida cambió
-                send_serial(output)              
-                prev_output = output  # Actualiza la salida anterior
+            send_serial(output)
 
         except Exception as e:
             print(f"Error: {e}") # Maneja otras excepciones
         contador += 1
-        time.sleep(3)
+        time.sleep(1)
 
 # llamada de funcion / tipo interrupcion
 data_thread = threading.Thread(target=recopilar_data)
