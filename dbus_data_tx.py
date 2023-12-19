@@ -9,7 +9,7 @@ ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y ba
 
 def obtener_reproductores_activos():
     # Ejecuta el comando y captura la salida para obtener una lista de reproductores activos
-    command = "busctl --user --list | grep org.mpris.MediaPlayer2"
+    command = "busctl --user --list | grep org.mpris.MediaPlayer2 | head -n 1"
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
 
@@ -220,15 +220,15 @@ try:
                 subprocess.run(["pamixer", command, value])
                 char_buffer = ""  # Limpia el buffer
             elif "prev" in char_buffer:
-                subprocess.run(["cmus-remote", "-r"])
+                subprocess.run(["playerctl", "previous"])
                 print("prev")
                 char_buffer = ""  # Limpia el buffer
             elif "next" in char_buffer:
-                subprocess.run(["cmus-remote", "-n"])
+                subprocess.run(["playerctl", "next"])
                 print("next")
                 char_buffer = ""  # Limpia el buffer
             elif "play" in char_buffer:
-                subprocess.run(["cmus-remote", "-p"])
+                subprocess.run(["playerctl", "play-pause"])
                 print("play")
                 char_buffer = ""  # Limpia el buffer
 
