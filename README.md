@@ -5,18 +5,17 @@ Vumeter, es un proyecto con el que puedes mostrar en un OLED, información en ti
 Este script de Python interactúa con reproductores multimedia a traves de D-Bus y formatea la información y la envía al atmega32 que controla la pantalla OLED.
 
 ## Por implementar:
-- cambiar control de volumen a encoder. (0%)
--   vumetro (30%)
-- 
+
+- vumetro (30%)
 - notificaciónes (0%)
 
 ## Software
 
-- [Python 3.x] (https://www.python.org/downloads/)
+- [Python 3.x](https://www.python.org/downloads/)
 - [pydbus](https://pypi.org/project/pydbus/)
+- [pamixer](https://man.archlinux.org/man/pamixer.1)
 - [playerctld](https://archlinux.org/packages/extra/x86_64/playerctl/)
 - [unidecode](https://pypi.org/project/Unidecode/)
-- [pamixer](https://man.archlinux.org/man/pamixer.1)
 
 ## Hardware
 
@@ -75,7 +74,6 @@ BS2 - GND
 ## 3D image 
 
 ![Image](https://github.com/rattamayhorka/vumeter/blob/main/images/3d.png)
-
 
 ## Configuración
 
