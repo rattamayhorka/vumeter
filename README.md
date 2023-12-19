@@ -66,7 +66,16 @@ BS2 - GND
 
 ## Diagrama 
 
-![Image](https://github.com/rattamayhorka/vumeter/blob/main/circuito.png)
+![Image](https://github.com/rattamayhorka/vumeter/blob/main/images/schematic.png)
+
+## PCB 
+
+![Image](https://github.com/rattamayhorka/vumeter/blob/main/images/pcb.png)
+
+## 3D image 
+
+![Image](https://github.com/rattamayhorka/vumeter/blob/main/images/3d.png)
+
 
 ## Configuración
 
