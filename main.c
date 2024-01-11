@@ -14,6 +14,8 @@
 #define DISPLAY_WIDTH 20
 #define DISPLAY_HEIGHT 4
 
+#define COMPARE_VALUE 15624
+
 volatile uint8_t interrupt_timer_counter = 0;
 volatile uint8_t usart_buffer_index = 0;
 
@@ -46,13 +48,6 @@ void usart_init(void){
     UBRRL = BAUDRATE;
     UCSRB = (1 << TXEN) | (1 << RXEN) | (1 << RXCIE);    // Habilitar la transmisión y la recepción UART, así como la interrupción de recepción
     UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0); // Configurar el formato de 
-}
-
-void timer_init(void){
-    TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
-    //TCNT1 = 34286; // Valor inicial para 300 milisegundos con prescaler 64
-    TCNT1 = 65472; // (65536 - 64) para 1 Hz
-    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
 }
 
 void usart_transmit(unsigned char data){
@@ -177,8 +172,30 @@ ISR(USART_RXC_vect) {
     }
 }
 
+void timer_init(void) {
+    //TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler de 64
+    TCCR1B |= (1 << CS10);
+    
+    TCNT1 = 65536 - 62500; // Valor inicial para 100 milisegundos con prescaler 64
+    //TCNT1 = 65472; // (65536 - 64) para 1 Hz
+    
+    TIMSK |= (1 << TOIE1); // Habilita la interrupción por desbordamiento del temporizador
+}
+
 ISR(TIMER1_OVF_vect) {
-    PORTD ^= (1 << PD6); // Invierte el estado del pin PD6 (encender/apagar LED)
+    static uint16_t counter = 0;
+
+    if (counter < 1) {
+        PORTD |= (1 << PD6); // Enciende el LED durante 100 ms
+    } else {
+        PORTD &= ~(1 << PD6); // Apaga el LED después de 100 ms
+    }
+
+    counter++;
+
+    if (counter == 300) {
+        counter = 0; // Reinicia el contador
+    }
 }
 
 void boot_splash(void){
