@@ -186,9 +186,9 @@ ISR(TIMER1_OVF_vect) {
     static uint16_t counter = 0;
 
     if (counter < 1) {
-        PORTD |= (1 << PD6); // Enciende el LED durante 100 ms
+        PORTD |= (1 << PD6); // Enciende el LED
     } else {
-        PORTD &= ~(1 << PD6); // Apaga el LED después de 100 ms
+        PORTD &= ~(1 << PD6); // Apaga el LED
     }
 
     counter++;

@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "NHD-0420CW-AG3")(type "Legacy")(uri "${KIPRJMOD}/libraries/NHD-0420CW-AG3.lib")(options "")(descr ""))
+)
