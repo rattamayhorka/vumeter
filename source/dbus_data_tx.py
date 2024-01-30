@@ -6,29 +6,35 @@ import threading
 from unidecode import unidecode
 
 ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
+import subprocess
+
 
 def obtener_reproductores_activos():
-    # Ejecuta el comando y captura la salida para obtener una lista de reproductores activos
-    command = "busctl --user --list | grep org.mpris.MediaPlayer2 | head -n 1"
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
+    try:
+        # Ejecuta el comando y captura la salida para obtener una lista de reproductores activos
+        command = "busctl --user --list | grep org.mpris.MediaPlayer2 | head -n 1"
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
 
-    # Verifica si hubo errores
-    if stderr:
-        print(f"Error: {stderr.decode('utf-8')}")
+        # Verifica si hubo errores
+        if stderr:
+            print(f"Error: {stderr.decode('utf-8')}")
 
-    # Guarda la salida en la variable players
-    players = stdout.decode('utf-8')
+        # Guarda la salida en la variable players
+        players = stdout.decode('utf-8')
 
-    # Divide la cadena en líneas
-    player_lines = players.split('\n')
-    return player_lines
+        # Divide la cadena en líneas
+        player_lines = players.split('\n')
 
-    unicd_output = unidecode(dato_envio)
-    print(dato_envio)  # Imprime la salida
-    for char in unicd_output:
-        ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
-        time.sleep(0.002)  # Espera 2 ms entre cada carácter            
+        # Verifica si no hay reproductores activos
+        if not player_lines:
+            print("No se encontraron reproductores multimedia activos.")
+            return []  # Retorna una lista vacía indicando que no se encontraron reproductores activos
+
+        return player_lines  # Retorna la lista de reproductores activos
+    except subprocess.CalledProcessError as e:
+        print(f"Error al obtener reproductores activos: {e}")
+        return []  # Retorna una lista vacía en caso de error
 
 def send_serial(dato_envio):
     unicd_output = unidecode(dato_envio)
@@ -36,7 +42,7 @@ def send_serial(dato_envio):
     for char in unicd_output:
         ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
         time.sleep(0.002)  # Espera 2 ms entre cada carácter
-    
+   
 def recopilar_data():
     contador = 0
     artist = ""
@@ -47,10 +53,11 @@ def recopilar_data():
     wait_printing_pc_vars = 3
     while True:
         try:
+            
             player_lines = obtener_reproductores_activos()
             if not player_lines:
                 print("No hay reproductores activos. Esperando...")
-                time.sleep(3)  # Espera 10 segundos antes de volver a verificar
+                time.sleep(3)  # Espera 3 segundos antes de volver a verificar
                 continue
             
             temp1 = subprocess.check_output(
@@ -103,7 +110,7 @@ def recopilar_data():
                 shell=True,
                 text=True  # Asegura que la salida sea una cadena de texto (str)
             ).strip()  # Elimina espacios en blanco al principio y al final
-
+            
             # Itera a través de las líneas y muestra la primera parte de cada línea antes del primer espacio en blanco
             for line in player_lines:
                 parts = line.split()
@@ -135,21 +142,41 @@ def recopilar_data():
 
             if title and service_name and (contador < time_until_print_pc_vars):
                 max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
-                if max_len > 20: # Verifica si max_len es mayor a 20
-                    for i in range(max_len - 19):  # Ajuste aquí
+                if max_len > 21: # Verifica si max_len es mayor a 20
+                    for i in range(max_len - 20):  # Ajuste aquí
                         linea_1 = f"{reproductor}...:"
                         linea_2 = artist
                         linea_3 = title
-                        linea_4 = ""
+                        # Obtener el volumen en tiempo real
+                        get_volume = subprocess.check_output(
+                            "pamixer --get-volume",
+                            shell=True,
+                            text=True
+                        ).strip()
 
-                        if len(linea_1) > 19:
-                            linea_1 = linea_1[i:i + 19]
+                        get_mute = subprocess.check_output(
+                            "pamixer --get-mute",
+                            shell=True,
+                            text=True
+                        ).strip()
+                        if get_mute == "true":
+                            get_mute = "on"
+                        else:
+                            get_mute = "off" 
 
-                        if len(linea_2) > 19:
-                            linea_2 = linea_2[i:i + 19]
+                        linea_4 = f"vol:{get_volume}      mute:{get_mute}"
 
-                        if len(linea_3) > 19:
-                            linea_3 = linea_3[i:i + 19]
+                        if len(linea_1) > 20:
+                            linea_1 = linea_1[i:i + 20]
+
+                        if len(linea_2) > 20:
+                            linea_2 = linea_2[i:i + 20]
+
+                        if len(linea_3) > 20:
+                            linea_3 = linea_3[i:i + 20]
+
+                        if len(linea_4) > 20:
+                            linea_4 = linea_4[i:i + 20]
 
                         output = f"\a{linea_1}\n{linea_2}\n{linea_3}\n{linea_4}\n"
                         send_serial(output)
@@ -163,7 +190,24 @@ def recopilar_data():
                     linea_1 = f"{reproductor}...:"
                     linea_2 = artist
                     linea_3 = title
-                    linea_4 = ""
+                    # Obtener el volumen en tiempo real
+                    get_volume = subprocess.check_output(
+                        "pamixer --get-volume",
+                        shell=True,
+                        text=True
+                    ).strip()
+
+                    get_mute = subprocess.check_output(
+                        "pamixer --get-mute",
+                        shell=True,
+                        text=True
+                    ).strip()
+                    if get_mute == "true":
+                        get_mute = "on"
+                    else:
+                        get_mute = "off" 
+
+                    linea_4 = f"vol:{get_volume}      mute:{get_mute}"
 
                     output = f"\a{linea_1}\n{linea_2}\n{linea_3}\n{linea_4}\n"
                     send_serial(output)
@@ -184,8 +228,13 @@ def recopilar_data():
             send_serial(output)
 
         except Exception as e:
-            print(f"Error: {e}") # Maneja otras excepciones
-            
+            if "No player is being controlled by playerctld" in str(e):
+                #print("No hay reproductor multimedia activo siendo controlado por playerctld.")
+                output = f"\aEsperando\nReproductor...\n\n\n"
+                send_serial(output)
+            else:
+                print(f"Error Exception: {e}")  # Maneja otras excepciones
+
         contador += 1
         time.sleep(1)
 
