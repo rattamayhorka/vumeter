@@ -8,6 +8,8 @@ from unidecode import unidecode
 ser = serial.Serial('/dev/ttyUSB0', 9600)  # Configuración de puerto serie y baudrate a conectarse / cambiar cuando sea unico el USB
 import subprocess
 
+delay_music = 80 
+delay_pc_vars = 6
 
 def obtener_reproductores_activos():
     try:
@@ -42,15 +44,21 @@ def send_serial(dato_envio):
     for char in unicd_output:
         ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
         time.sleep(0.002)  # Espera 2 ms entre cada carácter
-   
+
+def send_serial_sin_unicode(dato_envio):
+    print(dato_envio)  # Imprime la salida
+    for char in dato_envio:
+        ser.write(char.encode())  # Convierte el carácter a bytes y envíalo por serial
+        time.sleep(0.002)  # Espera 2 ms entre cada carácter
+
 def recopilar_data():
     contador = 0
     artist = ""
     title = ""
     service_name = ""
     reproductor = ""
-    time_until_print_pc_vars = 90
-    wait_printing_pc_vars = 3
+    time_until_print_pc_vars = delay_music
+    wait_printing_pc_vars = delay_pc_vars
     while True:
         try:
             
@@ -125,12 +133,10 @@ def recopilar_data():
                     # Conéctate al servicio D-Bus de un reproductor multimedia específico
                     session_bus = pydbus.SessionBus()
                     player = session_bus.get(service_name, '/org/mpris/MediaPlayer2')
-        
+
                     playback_status = player.PlaybackStatus
 
                     # Obtiene los datos de metadatos del reproductor
-
-
                     metadata = player.Metadata
                     if 'xesam:artist' in metadata and 'xesam:title' in metadata:
                         artist = metadata["xesam:artist"][0]
@@ -206,6 +212,7 @@ def recopilar_data():
                         shell=True,
                         text=True
                     ).strip()
+
                     if get_mute == "true":
                         get_mute = "on"
                     else:
@@ -225,11 +232,11 @@ def recopilar_data():
                 output = f"\aEsperando\nReproductor...\n\n\n"
 
             if contador >= time_until_print_pc_vars:
-                output = f"\awifi:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x80C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
+                output = f"\awifi:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x17C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
 
             if contador == time_until_print_pc_vars + wait_printing_pc_vars:
                 contador = 0
-            send_serial(output)
+            send_serial_sin_unicode(output)
 
         except Exception as e:
             if "No player is being controlled by playerctld" in str(e):

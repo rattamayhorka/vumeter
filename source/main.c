@@ -97,6 +97,7 @@ void ScrollBuffer(char *buffer, int bufferSize, int j) {
 
 void PrintBuffer(char *buffer, int j) {
     for (int i = 0; buffer[i] != '\0'; i++) {
+        //correccion de caracteres
         if (buffer[i] == '{') {
             buffer[i] = 0xFD;
         } else if (buffer[i] == '}') {
@@ -105,7 +106,9 @@ void PrintBuffer(char *buffer, int j) {
             buffer[i] = 0xFA;
         } else if (buffer[i] == ']') {
             buffer[i] = 0xFC;
-        } else if (buffer[i] == 0xC2) {
+        } else if (buffer[i] == '_') {
+            buffer[i] = 0xC4;
+        } else if (buffer[i] == 0x17) {
             buffer[i] = 0x80;
         }
     }
@@ -320,7 +323,7 @@ void boot(void){ //funcion de inicio
     ports_init();
     OLED_Init(); // Inicializar OLED
     timer_init();
-    //boot_splash();
+    boot_splash();
     usart_init(); // Inicializar USART    
     sei();
     PORTD |= (1 << PD6);    
