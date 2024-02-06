@@ -125,8 +125,12 @@ def recopilar_data():
                     # Conéctate al servicio D-Bus de un reproductor multimedia específico
                     session_bus = pydbus.SessionBus()
                     player = session_bus.get(service_name, '/org/mpris/MediaPlayer2')
+        
+                    playback_status = player.PlaybackStatus
 
                     # Obtiene los datos de metadatos del reproductor
+
+
                     metadata = player.Metadata
                     if 'xesam:artist' in metadata and 'xesam:title' in metadata:
                         artist = metadata["xesam:artist"][0]
@@ -144,7 +148,7 @@ def recopilar_data():
                 max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
                 if max_len > 21: # Verifica si max_len es mayor a 20
                     for i in range(max_len - 20):  # Ajuste aquí
-                        linea_1 = f"{reproductor}...:"
+                        linea_1 = f"{reproductor}...: {playback_status}"
                         linea_2 = artist
                         linea_3 = title
                         # Obtener el volumen en tiempo real
@@ -164,7 +168,7 @@ def recopilar_data():
                         else:
                             get_mute = "off" 
 
-                        linea_4 = f"vol:{get_volume}      mute:{get_mute}"
+                        linea_4 = f"vol:{get_volume}     mute:{get_mute}"
 
                         if len(linea_1) > 20:
                             linea_1 = linea_1[i:i + 20]
@@ -187,7 +191,7 @@ def recopilar_data():
                     reproductor = ""
                 else:
                     # Si max_len no es mayor a 20, imprime directamente
-                    linea_1 = f"{reproductor}...:"
+                    linea_1 = f"{reproductor}...: {playback_status}"
                     linea_2 = artist
                     linea_3 = title
                     # Obtener el volumen en tiempo real
