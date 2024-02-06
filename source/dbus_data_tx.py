@@ -174,7 +174,7 @@ def recopilar_data():
                         else:
                             get_mute = "off" 
 
-                        linea_4 = f"vol:{get_volume}     mute:{get_mute}"
+                        linea_4 = f"Vol:{get_volume}     Mute:{get_mute}"
 
                         if len(linea_1) > 20:
                             linea_1 = linea_1[i:i + 20]
@@ -218,7 +218,7 @@ def recopilar_data():
                     else:
                         get_mute = "off" 
 
-                    linea_4 = f"vol:{get_volume}      mute:{get_mute}"
+                    linea_4 = f"Vol:{get_volume}      Mute:{get_mute}"
 
                     output = f"\a{linea_1}\n{linea_2}\n{linea_3}\n{linea_4}\n"
                     send_serial(output)
@@ -232,7 +232,7 @@ def recopilar_data():
                 output = f"\aEsperando\nReproductor...\n\n\n"
 
             if contador >= time_until_print_pc_vars:
-                output = f"\awifi:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\ntemp:{temp}\x17C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
+                output = f"\awifi:{wifi_essid}\n{wifi_signal}dB Mem:{free_memory}Mib\nTemp:{temp}\x17C\n/:{root_capacity} /home:{home_capacity}\n"  # Concatena la información
 
             if contador == time_until_print_pc_vars + wait_printing_pc_vars:
                 contador = 0
