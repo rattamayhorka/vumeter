@@ -180,8 +180,6 @@ def main():
                                 artist = artist.replace(' - Topic',"")
 
                 if title and service_name and (contador < time_until_print_pc_vars):
-                    logger.info(f"contador: {contador}")
-        
                     max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
                     if max_len > 21: # Verifica si max_len es mayor a 20
                         for i in range(max_len - 20):  # Ajuste aquí
