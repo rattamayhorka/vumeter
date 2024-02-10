@@ -16,6 +16,7 @@ Este script de Python interactúa con reproductores multimedia a traves de D-Bus
 - [pamixer](https://man.archlinux.org/man/pamixer.1)
 - [playerctld](https://archlinux.org/packages/extra/x86_64/playerctl/)
 - [unidecode](https://pypi.org/project/Unidecode/)
+- [Daemonize](https://pypi.org/project/Unidecode/)
 
 ## Hardware
 
