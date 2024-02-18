@@ -2,13 +2,13 @@ import os
 import time
 import serial
 import subprocess
-import pydbus
-import threading
+import pydbus  #dependencia
+import threading 
 import logging
 import sys
 
-from unidecode import unidecode
-from daemonize import Daemonize
+from unidecode import unidecode #dependencia
+from daemonize import Daemonize #dependencia
 
 pid = "/tmp/vumeter.pid"
 logger = logging.getLogger(__name__)

@@ -1641,7 +1641,7 @@
     (property "Value" "NHD-0420CW-AG3" (at 219.71 92.71 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "NHD_NHD-0420CW-AG3" (at 219.71 118.11 0)
+    (property "Footprint" "Library:NHD-0420CW-AG3" (at 219.71 118.11 0)
       (effects (font (size 1.27 1.27)) (justify left bottom) hide)
     )
     (property "Datasheet" "" (at 219.71 118.11 0)

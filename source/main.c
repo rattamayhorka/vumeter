@@ -19,9 +19,12 @@
 volatile uint8_t interrupt_timer_counter = 0;
 volatile uint8_t usart_buffer_index = 0;
 
+volatile uint16_t elapsed_seconds = 0;
+volatile uint8_t received_a = 0;
+volatile uint8_t timer_expired = 0;
+
 const char buffer_saludo[10] = { 'H','E','C','H','O',' ','P','O','R',':'};
 const char buffer_nombre[14] = { 'R','A','T','T','A','M','A','Y','H','O','R','K','A','.'};
-
 
 static uint8_t switch_next = 0; //next
 static uint8_t switch_prev = 0; //prev
@@ -140,6 +143,8 @@ ISR(USART_RXC_vect) {
     char received_data = UDR; // Leer el carácter recibido
 
     if (received_data == '\a'){
+        received_a = 1; // Se ha recibido '/a'
+        timer_expired = 0; // Reinicia el temporizador
         // Borrar la pantalla LCD y reiniciar todos los buffers
         for (int i = 0; i < NUM_BUFFERS; i++){
             buffers[i][0] = '\0'; // Reiniciar el buffer
@@ -147,17 +152,20 @@ ISR(USART_RXC_vect) {
         usart_buffer_index = 0; // Reiniciar el índice del buffer actual
         current_buffer_index = 0; // Reiniciar el índice del buffer actual
         interrupt_timer_counter = 0; // Reiniciar el contador de tiempo
-    } else if (received_data == '\n') {
+    }
+    else if (received_data == '\n') {
         // Cambiar al siguiente buffer cuando se recibe '\n'
         current_buffer_index++;
 
         // Si current_buffer_index es igual al número de buffers, significa que se han completado todos
         if (current_buffer_index == NUM_BUFFERS){
             OLED_print();
-        } else {
+        }
+        else {
             usart_buffer_index = 0; // Reiniciar el índice del buffer actual
         }
-    } else {
+    }
+    else {
         // Almacenar el carácter en el buffer actual
         char *current_buffer = buffers[current_buffer_index];
 
@@ -186,20 +194,30 @@ void timer_init(void) {
 }
 
 ISR(TIMER1_OVF_vect) {
-    static uint16_t counter = 0;
+    static uint16_t led_counter = 0;
 
-    if (counter < 1) {
+    if (led_counter < 1) {
         PORTD |= (1 << PD6); // Enciende el LED
     } else {
         PORTD &= ~(1 << PD6); // Apaga el LED
     }
 
-    counter++;
+    led_counter++;
+    elapsed_seconds++; // Incrementa el contador de segundos
 
-    if (counter == 300) {
-        counter = 0; // Reinicia el contador
+    if (led_counter == 300) { //300 ~ 2.5s
+        led_counter = 0; // Reinicia el contador
+    }
+    if (elapsed_seconds == 7200 && !received_a && !timer_expired) {
+        // Realiza la acción deseada aquí, por ejemplo, imprimir en la pantalla OLED
+        OLED_clrscr();
+        OLED_gotoxy(0, 0);
+        //OLED_Puts("");
+        timer_expired = 1; // Marca el temporizador como expirado
     }
 }
+
+
 
 void boot_splash(void){
     //bloques
