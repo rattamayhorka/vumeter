@@ -9,12 +9,9 @@
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1)
 #define USART_BUFFER_SIZE 100
 #define NUM_BUFFERS 4 //Número de buffers (artist, title, album)
-#define HISTERESIS 1 //Número que se maneja para eliminar el error en la entrada del ADC 
 
 #define DISPLAY_WIDTH 20
 #define DISPLAY_HEIGHT 4
-
-#define COMPARE_VALUE 15624
 
 volatile uint8_t interrupt_timer_counter = 0;
 volatile uint8_t usart_buffer_index = 0;
@@ -39,8 +36,8 @@ char year_buffer[USART_BUFFER_SIZE];
 char *buffers[NUM_BUFFERS] = {artist_buffer, title_buffer, album_buffer,year_buffer};
 
 int current_buffer_index = 0;
-int aState_1;
-int aLastState_1;
+int encoder_state;
+int last_encoder_state;
 
 int read_encoder(void){
     return ((PIND & (1 << PD2)) >> PD2) | (((PIND & (1 << PD3)) >> PD3) << 1);
@@ -209,15 +206,13 @@ ISR(TIMER1_OVF_vect) {
         led_counter = 0; // Reinicia el contador
     }
     if (elapsed_seconds == 7200 && !received_a && !timer_expired) {
-        // Realiza la acción deseada aquí, por ejemplo, imprimir en la pantalla OLED
+        //Apaga OLED si no hubo conexion a pc en ~1 min. 
         OLED_clrscr();
         OLED_gotoxy(0, 0);
-        //OLED_Puts("");
+        
         timer_expired = 1; // Marca el temporizador como expirado
     }
 }
-
-
 
 void boot_splash(void){
     //bloques
@@ -355,37 +350,37 @@ int main(void){
     //iniciar timer
 
     while (1) {
-        aState_1 = read_encoder();
+        encoder_state = read_encoder();
 
-        if (aState_1 != aLastState_1) {
-            if ((aLastState_1 == 0b00 && aState_1 == 0b01) || (aLastState_1 == 0b01 && aState_1 == 0b11) ||
-    (aLastState_1 == 0b11 && aState_1 == 0b10) || (aLastState_1 == 0b10 && aState_1 == 0b00)) {
-                char debug_message[20];
-                sprintf(debug_message, "-i 1\n");
-                for (int i = 0; debug_message[i] != '\0'; i++) {
-                    usart_transmit(debug_message[i]);
+        if (encoder_state != last_encoder_state) {
+            if ((last_encoder_state == 0b00 && encoder_state == 0b01) || (last_encoder_state == 0b01 && encoder_state == 0b11) ||
+    (last_encoder_state == 0b11 && encoder_state == 0b10) || (last_encoder_state == 0b10 && encoder_state == 0b00)) {
+                char encoder_command_send[20];
+                sprintf(encoder_command_send, "-i 1\n");
+                for (int i = 0; encoder_command_send[i] != '\0'; i++) {
+                    usart_transmit(encoder_command_send[i]);
                 }
 
             } 
         }
-        if ((aLastState_1 == 0b00 && aState_1 == 0b10) || (aLastState_1 == 0b01 && aState_1 == 0b00) ||
-    (aLastState_1 == 0b11 && aState_1 == 0b01) || (aLastState_1 == 0b10 && aState_1 == 0b11)) {
-                char debug_message[20];
-                sprintf(debug_message, "-d 1\n");
-                for (int i = 0; debug_message[i] != '\0'; i++) {
-                    usart_transmit(debug_message[i]);
+        if ((last_encoder_state == 0b00 && encoder_state == 0b10) || (last_encoder_state == 0b01 && encoder_state == 0b00) ||
+    (last_encoder_state == 0b11 && encoder_state == 0b01) || (last_encoder_state == 0b10 && encoder_state == 0b11)) {
+                char encoder_command_send[20];
+                sprintf(encoder_command_send, "-d 1\n");
+                for (int i = 0; encoder_command_send[i] != '\0'; i++) {
+                    usart_transmit(encoder_command_send[i]);
                 }
 
         }
 
-        aLastState_1 = aState_1;
+        last_encoder_state = encoder_state;
         if (!(PINC & (1 << PC0))) {
             if (switch_next == 0) {
                 // El estado del interruptor ha cambiado a presionado
-                char debug_message[20];
-                sprintf(debug_message, "next\n");
-                for (int i = 0; debug_message[i] != '\0'; i++) {
-                    usart_transmit(debug_message[i]);
+                char encoder_command_send[20];
+                sprintf(encoder_command_send, "next\n");
+                for (int i = 0; encoder_command_send[i] != '\0'; i++) {
+                    usart_transmit(encoder_command_send[i]);
                 }
                 switch_next = 1;
             }
@@ -396,10 +391,10 @@ int main(void){
         if (!(PINC & (1 << PC1))) {
             if (switch_prev == 0) {
                 // El estado del interruptor ha cambiado a presionado
-                char debug_message[20];
-                sprintf(debug_message, "prev\n");
-                for (int i = 0; debug_message[i] != '\0'; i++) {
-                    usart_transmit(debug_message[i]);
+                char encoder_command_send[20];
+                sprintf(encoder_command_send, "prev\n");
+                for (int i = 0; encoder_command_send[i] != '\0'; i++) {
+                    usart_transmit(encoder_command_send[i]);
                 }
                 switch_prev = 1;
             }
@@ -410,10 +405,10 @@ int main(void){
         if (!(PIND & (1 << PD4))) {
             if (switch_mute == 0) {
                 // El estado del interruptor ha cambiado a presionado
-                char debug_message[20];
-                sprintf(debug_message, "-t 1\n");
-                for (int i = 0; debug_message[i] != '\0'; i++) {
-                    usart_transmit(debug_message[i]);
+                char encoder_command_send[20];
+                sprintf(encoder_command_send, "-t 1\n");
+                for (int i = 0; encoder_command_send[i] != '\0'; i++) {
+                    usart_transmit(encoder_command_send[i]);
                 }
                 switch_mute = 1;
             }
@@ -424,10 +419,10 @@ int main(void){
         if (!(PIND & (1 << PD7))) {
             if (switch_play == 0) {
                 // El estado del interruptor ha cambiado a presionado
-                char debug_message[20];
-                sprintf(debug_message, "play\n");
-                for (int i = 0; debug_message[i] != '\0'; i++) {
-                    usart_transmit(debug_message[i]);
+                char encoder_command_send[20];
+                sprintf(encoder_command_send, "play\n");
+                for (int i = 0; encoder_command_send[i] != '\0'; i++) {
+                    usart_transmit(encoder_command_send[i]);
                 }
                 switch_play = 1;
             }
