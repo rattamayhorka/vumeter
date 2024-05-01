@@ -1,4 +1,9 @@
 (fp_lib_table
   (version 7)
   (lib (name "Library")(type "KiCad")(uri "${KIPRJMOD}/libraries/Library.pretty")(options "")(descr ""))
+  (lib (name "encoder")(type "KiCad")(uri "${KIPRJMOD}/libraries/encoder.pretty")(options "")(descr ""))
+  (lib (name "socket")(type "KiCad")(uri "${KIPRJMOD}/libraries/socket.pretty")(options "")(descr ""))
+  (lib (name "encoderfoot")(type "KiCad")(uri "${KIPRJMOD}/libraries/socket.pretty/encoderfoot.pretty")(options "")(descr ""))
+  (lib (name "encoder_completo")(type "KiCad")(uri "${KIPRJMOD}/libraries/socket.pretty/encoder_completo.pretty")(options "")(descr ""))
+  (lib (name "encodercero")(type "KiCad")(uri "${KIPRJMOD}/libraries/encodercero.pretty")(options "")(descr ""))
 )
