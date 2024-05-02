@@ -5398,7 +5398,7 @@
 		(fields_autoplaced yes)
 		(uuid "82db0c8f-4dab-4c7e-9bcc-595ef3970aed")
 		(property "Reference" "D1"
-			(at 119.38 153.9875 90)
+			(at 119.38 153.9874 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5406,8 +5406,8 @@
 				(justify right)
 			)
 		)
-		(property "Value" "hearthbeat led"
-			(at 119.38 156.5275 90)
+		(property "Value" "heartbeat led"
+			(at 119.38 156.5274 90)
 			(effects
 				(font
 					(size 1.27 1.27)
