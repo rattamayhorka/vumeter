@@ -313,11 +313,11 @@ def main():
                         logger.info("recived prev command")
                         subprocess.run(["playerctl", "previous"])
                         char_buffer = ""  # Limpia el buffer
-                    elif "next" in char_buffer:
+                    elif "play" in char_buffer:
                         logger.info("received next command")
                         subprocess.run(["playerctl", "next"])
                         char_buffer = ""  # Limpia el buffer
-                    elif "play" in char_buffer:
+                    elif "next" in char_buffer:
                         logger.info("received play command")
                         subprocess.run(["playerctl", "play-pause"])
                         char_buffer = ""  # Limpia el buffer
