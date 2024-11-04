@@ -27,25 +27,25 @@ def find_ttyusb_by_model(model_name):
     tty_devices = {device.device_node: device for device in context.list_devices(subsystem='tty') if 'USB' in device.device_node}
     for tty_device, tty_info in tty_devices.items():
         if model_name in tty_info.get('ID_MODEL', ''):
-            logger.debug(f"Puerto encontrado: {tty_device}")
+            logger.debug(f"Puerto oled: {tty_device}")
             return tty_device
     logger.debug(f"No se encontró el modelo: {model_name}")
     return None
 
 def check_usb_port(model_name="USB-Serial_Controller"):
     while True:
-        puerto_usb = find_ttyusb_by_model(model_name)
-        if puerto_usb:
-            return puerto_usb
+        tty_oled = find_ttyusb_by_model(model_name)
+        if tty_oled:
+            return tty_oled
         else:
             logger.debug(f"Esperando el puerto USB para el modelo: {model_name}...")
             time.sleep(5)
 
 def main():
-    puerto_usb = check_usb_port()
-    if puerto_usb:
-        logger.debug(f"Puerto {puerto_usb} presente.")
-        ser = serial.Serial(puerto_usb, 9600)  
+    tty_oled = check_usb_port()
+    if tty_oled:
+        logger.debug(f"Puerto oled {tty_oled} presente.")
+        ser = serial.Serial(tty_oled, 9600)
         delay_music = 80
         delay_pc_vars = 6
 
@@ -94,6 +94,8 @@ def main():
         title = ""
         service_name = ""
         reproductor = ""
+        prev_artist = ""
+        prev_title = ""
         time_until_print_pc_vars = delay_music
         wait_printing_pc_vars = delay_pc_vars
         while True:
@@ -185,6 +187,12 @@ def main():
 
                             if ' - Topic' in artist: # Verifica si el título contiene " - " y divide en artist y title
                                 artist = artist.replace(' - Topic',"")
+
+                if artist != prev_artist or title != prev_title:
+                    subprocess.Popen(['python3', '/home/acatl/Proyectos/vumeter/source/cover2lcd.py'])
+                    logger.info(f"Canción cambiada: {artist} - {title}")
+                    prev_artist = artist
+                    prev_title = title
 
                 if title and service_name and (contador < time_until_print_pc_vars):
                     max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
@@ -335,8 +343,8 @@ def main():
                 ser.close()  # Cierra el puerto serie
                 while True:
                     if check_usb_port():
-                        logger.info("3Puerto serie reconectado.")
-                        ser = serial.Serial('/dev/ttyUSB0', 9600)  
+                        logger.debug(f"Puerto serie reconectado: {tty_oled}")
+                        ser = serial.Serial(tty_oled, 9600)
                         break  # Sale del bucle interno para continuar con el programa principal
                     else:
                         logger.info("4Esperando a que se reconecte el puerto serie...")
