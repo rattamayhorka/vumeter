@@ -6,6 +6,7 @@ import pydbus  #dependencia
 import threading 
 import logging
 import sys
+import pyudev 
 
 from unidecode import unidecode #dependencia
 from daemonize import Daemonize #dependencia
@@ -21,26 +22,31 @@ fh.setFormatter(logging.Formatter(log_format))
 logger.addHandler(fh)
 keep_fds = [fh.stream.fileno()]
 
-def main():
-    logger.debug("Test")
+def find_ttyusb_by_model(model_name):
+    context = pyudev.Context()
+    tty_devices = {device.device_node: device for device in context.list_devices(subsystem='tty') if 'USB' in device.device_node}
+    for tty_device, tty_info in tty_devices.items():
+        if model_name in tty_info.get('ID_MODEL', ''):
+            logger.debug(f"Puerto encontrado: {tty_device}")
+            return tty_device
+    logger.debug(f"No se encontró el modelo: {model_name}")
+    return None
 
-daemon = Daemonize(app="test_app", pid=pid, action=main, keep_fds=keep_fds)
-daemon.start()
-
-def check_usb_port():
-    puerto_usb = "/dev/ttyUSB0"
+def check_usb_port(model_name="USB-Serial_Controller"):
     while True:
-        if os.path.exists(puerto_usb):
-            return True
+        puerto_usb = find_ttyusb_by_model(model_name)
+        if puerto_usb:
+            return puerto_usb
         else:
-            logger.debug(f"Puerto USB {puerto_usb} no está presente. Esperando...")
+            logger.debug(f"Esperando el puerto USB para el modelo: {model_name}...")
             time.sleep(5)
 
 def main():
-    if check_usb_port():
-        logger.debug("puerto presente.")
-        ser = serial.Serial('/dev/ttyUSB0', 9600)  
-        delay_music = 80 
+    puerto_usb = check_usb_port()
+    if puerto_usb:
+        logger.debug(f"Puerto {puerto_usb} presente.")
+        ser = serial.Serial(puerto_usb, 9600)  
+        delay_music = 80
         delay_pc_vars = 6
 
     def obtener_reproductores_activos():
@@ -66,6 +72,7 @@ def main():
                 return []  # Retorna una lista vacía indicando que no se encontraron reproductores activos
 
             return player_lines  # Retorna la lista de reproductores activos
+
         except subprocess.CalledProcessError as e:
             logger.error(f"Error al obtener reproductores activos: {e}")
             return []  # Retorna una lista vacía en caso de error
