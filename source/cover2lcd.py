@@ -84,6 +84,7 @@ def get_metadata(player_name):
     artist = metadata.get('xesam:artist')[0] if 'xesam:artist' in metadata else None
     title = metadata.get('xesam:title') if 'xesam:title' in metadata else None
     album_art_url = metadata.get('mpris:artUrl') if 'mpris:artUrl' in metadata else None
+    
     return artist, title, album_art_url
 
 def get_active_player():
