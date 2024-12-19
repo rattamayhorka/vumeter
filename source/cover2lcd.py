@@ -67,10 +67,8 @@ def search_album_art_on_lastfm(artist, title):
                 if image_url:
                     image_data = requests.get(image_url).content
                     img = Image.open(io.BytesIO(image_data))
-                    img = img.convert("RGB").resize((240, 240))
-                    enhancer = ImageEnhance.Contrast(img)
-                    img = enhancer.enhance(1.5)
-                    return img
+                    album_art = redimensionar_imagen(img)
+                    return album_art
             else:
                 print("No se encontró la pista con esa variante.")
     print("No se encontró la portada en Last.fm.")
@@ -84,8 +82,8 @@ def get_metadata(player_name):
     artist = metadata.get('xesam:artist')[0] if 'xesam:artist' in metadata else None
     title = metadata.get('xesam:title') if 'xesam:title' in metadata else None
     album_art_url = metadata.get('mpris:artUrl') if 'mpris:artUrl' in metadata else None
-    
-    return artist, title, album_art_url
+    playback_status = properties.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
+    return artist, title, album_art_url, playback_status
 
 def get_active_player():
     command = "busctl --user --list | grep org.mpris.MediaPlayer2 | head -n 1 | awk '{print $1}'"
@@ -93,13 +91,25 @@ def get_active_player():
     stdout, stderr = process.communicate()
     return stdout.decode('utf-8').strip()
 
-# Buscar el puerto serie correspondiente al modelo especificado
+def redimensionar_imagen(album_art):
+    album_art = album_art.convert("RGB")
+    aspect_ratio = album_art.width / album_art.height # Redimensionar la imagen para que la altura sea de 240 píxeles manteniendo la proporción
+    new_width = int(240 * aspect_ratio)
+    album_art = album_art.resize((new_width, 240))
+    left = (album_art.width - 240) // 2 # Recortar un cuadro centrado de 240x240
+    top = 0
+    right = left + 240
+    bottom = 240
+    album_art = album_art.crop((left, top, right, bottom))
+    enhancer = ImageEnhance.Contrast(album_art)
+    album_art = enhancer.enhance(1.7)
+    return album_art
+
 tty_lcd = find_ttyusb_by_model("CP2102_USB_to_UART_Bridge_Controller")
 
 if tty_lcd is not None:
     try:
-        # Configura el puerto serie para el ESP32
-        ser = serial.Serial(tty_lcd, 115200, timeout=1)
+        ser = serial.Serial(tty_lcd, 115200, timeout=1) # Configura el puerto serie para el ESP32
         time.sleep(2)
 
         if not ser.is_open:
@@ -109,32 +119,36 @@ if tty_lcd is not None:
         player_name = get_active_player()
 
         if player_name:
-            artist, title, album_art_url = get_metadata(player_name)
-            album_art = None
+            artist, title, album_art_url, playback_status = get_metadata(player_name)
+            
+            if playback_status == "Playing":
+                album_art = None
 
-            if artist and title:
-                album_art = search_album_art_on_lastfm(artist, title)
+                if artist and title:
+                    album_art = search_album_art_on_lastfm(artist, title)
 
-            if not album_art and album_art_url:
-                if album_art_url.startswith("file://"):
-                    local_path = album_art_url.replace("file://", "")
-                    try:
-                        with open(local_path, "rb") as f:
-                            image_data = f.read()
-                        album_art = Image.open(io.BytesIO(image_data))
-                        album_art = album_art.convert("RGB").resize((240, 240))
-                    except FileNotFoundError:
-                        print(f"No se encontró el archivo local: {local_path}")
+                if not album_art and album_art_url:
+                    if album_art_url.startswith("file://"):
+                        local_path = album_art_url.replace("file://", "")
+                        try:
+                            with open(local_path, "rb") as f:
+                                image_data = f.read()
+                            album_art = Image.open(io.BytesIO(image_data))
+                            album_art = redimensionar_imagen(album_art)
+                        except FileNotFoundError:
+                            print(f"No se encontró el archivo local: {local_path}")
 
-            if album_art:
-                print(f"Iniciando envío de portada: {artist} - {title}.")
-                send_image_to_lcd(album_art, ser)
-                print("Envío de portada completado.")
+                if album_art:
+                    print(f"Iniciando envío de portada: {artist} - {title}.")
+                    send_image_to_lcd(album_art, ser)
+                    print("Envío de portada completado.")
+                else:
+                    print("No se pudo obtener la portada.")
             else:
-                print("No se pudo obtener la portada.")
+                print("No hay reproducción activa en este momento.")
+                #aqui hay que enviar una imagen equis
         else:
             print("No hay reproductores activos en este momento.")
-
     except serial.SerialException as e:
         print(f"Error al abrir el puerto serie: {e}")
 else:
