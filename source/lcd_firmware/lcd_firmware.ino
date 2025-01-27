@@ -6,12 +6,13 @@
 TFT_eSPI tft = TFT_eSPI(); // Inicializa la pantalla
 const int screenWidth = 240;  // Ancho de la imagen
 const int screenHeight = 240; // Alto de la imagen
-const int screenOffsetX = 40; // Offset horizontal para centrar (320-240)/2
+//const int screenOffsetX = 40; // Offset horizontal para centrar (320-240)/2
+const int screenOffsetX = 0; // Offset horizontal para centrar (320-240)/2
 
 void setup() {
   Serial.begin(115200);      // Iniciar la comunicación serial
   tft.init();                // Inicializar la pantalla
-  tft.setRotation(1);        // Ajustar la rotación de la pantalla
+  tft.setRotation(0);        // Ajustar la rotación de la pantalla
   tft.fillScreen(TFT_WHITE); // Limpiar la pantalla al inicio
 }
 
