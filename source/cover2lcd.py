@@ -36,6 +36,8 @@ def invert_color(r, g, b):
 
 def send_image_to_lcd(image, ser):
     width, height = image.size
+    #ser.write(b'\xFF')  # Comando especial para reiniciar la posición en el Arduino
+    #time.sleep(0.1)
     for y in range(height):
         pixels = bytearray()
         for x in range(width):
