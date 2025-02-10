@@ -144,8 +144,16 @@ if tty_lcd is not None:
                     print(f"Iniciando envío de portada: {artist} - {title}.")
                     send_image_to_lcd(album_art, ser)
                     print("Envío de portada completado.")
+
                 else:
-                    print("No se pudo obtener la portada.")
+                    print("No se pudo obtener la portada. Enviando imagen genérica.")
+                    try:
+                        generic_image = Image.open("/home/acatl/Proyectos/vumeter/images/nosignal.png")
+                        generic_image = redimensionar_imagen(generic_image)
+                        send_image_to_lcd(generic_image, ser)
+                        print("Imagen genérica enviada correctamente.")
+                    except Exception as e:
+                        print(f"Error al cargar la imagen genérica: {e}")
             else:
                 print("No hay reproducción activa en este momento.")
                 #aqui hay que enviar una imagen equis

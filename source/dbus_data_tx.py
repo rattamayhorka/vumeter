@@ -198,7 +198,13 @@ def main():
                     max_len = max(len(reproductor), len(artist), len(title)) + 1  # Ajuste aquí
                     if max_len > 21: # Verifica si max_len es mayor a 20
                         for i in range(max_len - 20):  # Ajuste aquí
-                            linea_1 = f"{reproductor}...: {playback_status}"
+                            # Traducción del estado de reproducción
+                            if playback_status == "Playing":
+                                playback_status = "Reproduciending:"
+                            elif playback_status == "Paused":
+                                playback_status = "Pausado..."
+                            #linea_1 = f"{reproductor}...: {playback_status}"
+                            linea_1 = f"{playback_status}"
                             linea_2 = artist
                             linea_3 = title
                             # Obtener el volumen en tiempo real
@@ -242,7 +248,12 @@ def main():
                         reproductor = ""
                     else:
                         # Si max_len no es mayor a 20, imprime directamente
-                        linea_1 = f"{reproductor}...: {playback_status}"
+                        if playback_status == "Playing":
+                            playback_status = "Reproduciending:"
+                        elif playback_status == "Paused":
+                            playback_status = "Pausado..."
+                        #linea_1 = f"{reproductor}...: {playback_status}"
+                        linea_1 = f"{playback_status}"
                         linea_2 = artist
                         linea_3 = title
                         # Obtener el volumen en tiempo real
@@ -363,3 +374,4 @@ def run_as_daemon():
 
 if __name__ == "__main__":
     run_as_daemon()
+    
