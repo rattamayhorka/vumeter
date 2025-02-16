@@ -15,6 +15,11 @@ const long interval = 100;    // Intervalo de actualización del vúmetro (ms)
 int currentX = 0; // Posición actual en X para la portada
 int currentY = 0; // Posición actual en Y para la portada
 
+
+// Variables para el valor mínimo y máximo
+int minValue = 4095; // Inicialmente el valor máximo posible
+int maxValue = 0;    // Inicialmente el valor mínimo posible
+
 void setup() {
   Serial.begin(115200);
   tft.init();
@@ -53,20 +58,75 @@ void loop() {
   }
 }
 
+/*
 void drawVumeter(int value) {
   int numBlocks = 10; // Número de bloques simulando LEDs
   int blockWidth = screenWidth / numBlocks;
-  int activeBlocks = map(value, 0, 4095, 0, numBlocks + 1);
 
-  static int lastActiveBlocks = -1;
-  if (lastActiveBlocks != activeBlocks) {
-    for (int i = 0; i < numBlocks; i++) {
-      uint16_t color = (i < activeBlocks) ? getColorForLevel(i, numBlocks) : rgbTo565(50, 50, 50);
-      tft.fillRect(i * blockWidth, screenHeight + 20, blockWidth - 2, vumeterHeight, color);
+  // Actualizar los valores mínimo y máximo
+  if (value < minValue) {
+    minValue = value; // Si el valor actual es menor que el mínimo, actualiza
+  }
+  if (value > maxValue) {
+    maxValue = value; // Si el valor actual es mayor que el máximo, actualiza
+  }
+
+  // Asegurarse de que los valores mínimo y máximo no sean iguales (para evitar divisiones por cero)
+  if (maxValue > minValue) {
+    // Mapeo de la señal al rango de bloques (0-10)
+    int activeBlocks = map(value, minValue, maxValue, 0, numBlocks);
+
+    // Dibuja los bloques del vúmetro según el valor mapeado
+    static int lastActiveBlocks = -1;
+    if (lastActiveBlocks != activeBlocks) {
+      for (int i = 0; i < numBlocks; i++) {
+        uint16_t color = (i < activeBlocks) ? getColorForLevel(i, numBlocks) : rgbTo565(50, 50, 50);
+        tft.fillRect(i * blockWidth, screenHeight + 20, blockWidth - 2, vumeterHeight, color);
+      }
+      lastActiveBlocks = activeBlocks;
     }
-    lastActiveBlocks = activeBlocks;
+  }
+  // Si los valores mínimo y máximo son iguales, no se hace nada para evitar el error de mapeo
+}
+*/
+
+void drawVumeter(int value) {
+  int numBlocks = 10; // Número de bloques simulando LEDs
+  int blockWidth = screenWidth / numBlocks;
+  static unsigned long lastResetTime = 0; // Última vez que se reiniciaron los valores
+
+  // Reiniciar min y max cada 6 segundos
+  if (millis() - lastResetTime >= 6000) {
+    minValue = 4095;
+    maxValue = 0;
+    lastResetTime = millis(); // Actualizar tiempo del último reinicio
+  }
+
+  // Actualizar los valores mínimo y máximo
+  if (value < minValue) {
+    minValue = value; // Si el valor actual es menor que el mínimo, actualiza
+  }
+  if (value > maxValue) {
+    maxValue = value; // Si el valor actual es mayor que el máximo, actualiza
+  }
+
+  // Asegurarse de que los valores mínimo y máximo no sean iguales (para evitar divisiones por cero)
+  if (maxValue > minValue) {
+    // Mapeo de la señal al rango de bloques (0-10)
+    int activeBlocks = map(value, minValue, maxValue, 0, numBlocks);
+
+    // Dibuja los bloques del vúmetro según el valor mapeado
+    static int lastActiveBlocks = -1;
+    if (lastActiveBlocks != activeBlocks) {
+      for (int i = 0; i < numBlocks; i++) {
+        uint16_t color = (i < activeBlocks) ? getColorForLevel(i, numBlocks) : rgbTo565(50, 50, 50);
+        tft.fillRect(i * blockWidth, screenHeight + 20, blockWidth - 2, vumeterHeight, color);
+      }
+      lastActiveBlocks = activeBlocks;
+    }
   }
 }
+
 
 uint16_t getColorForLevel(int level, int totalLevels) {
   switch (level) {
